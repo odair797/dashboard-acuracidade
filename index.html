@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard · Acuracidade de Estoque ERP x WMS · YBERA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════════ */
+:root{
+  --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --surface3:#2c3148;
+  --border:#2e3350; --border2:#3a4060;
+  --text:#e2e8f0; --muted:#7a8299; --muted2:#9ba4bb;
+  --accent:#4f8ef7; --accent2:#7eb3ff;
+  --red:#f05252; --orange:#f97316; --yellow:#facc15;
+  --lime:#84cc16; --green:#22c55e; --green2:#16a34a;
+  --teal:#14b8a6; --purple:#a78bfa; --pink:#f472b6;
+  --senior:#1a9c82;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;min-height:100vh;overflow-x:hidden;}
+
+/* ── HEADER ── */
+header{
+  background:linear-gradient(135deg,#1a1d27 0%,#0f1117 100%);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  position:sticky;top:0;z-index:50;
+}
+.header-logos{display:flex;align-items:center;gap:18px;}
+.logo-senior{display:flex;align-items:center;background:rgba(26,156,130,.08);border:1px solid rgba(26,156,130,.25);border-radius:10px;padding:8px 16px;}
+.logo-ybera{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 16px;}
+.partner-sep{font-size:12px;color:var(--muted);}
+.header-title{flex:1;text-align:center;}
+.header-title h1{font-size:17px;font-weight:800;letter-spacing:.3px;background:linear-gradient(90deg,#e2e8f0,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header-title .subtitle{font-size:11px;color:var(--muted);margin-top:3px;}
+.header-meta{text-align:right;font-size:11px;color:var(--muted);line-height:1.8;white-space:nowrap;}
+.header-meta strong{color:var(--text);}
+
+/* ── MAIN ── */
+main{padding:20px 28px;display:flex;flex-direction:column;gap:20px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+/* ── KPI CARD ── */
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.kpi-value{font-size:26px;font-weight:800;line-height:1.1;margin-top:5px;}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* ── SALDO SPLIT CARD ── */
+.saldo-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+.saldo-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;}
+.saldo-row{display:flex;align-items:stretch;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.saldo-seg{flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:3px;}
+.saldo-seg+.saldo-seg{border-left:1px solid var(--border);}
+.saldo-seg-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.saldo-seg-value{font-size:18px;font-weight:800;line-height:1.1;}
+.saldo-seg-note{font-size:9px;color:var(--muted);line-height:1.4;}
+
+/* ── DIFERENÇA CARD ── */
+.dif-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;grid-column:1/-1;}
+.dif-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;}
+.dif-row{display:flex;gap:12px;flex-wrap:wrap;}
+.dif-seg{flex:1;min-width:180px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;}
+.dif-seg-unit{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;}
+.dif-seg-val{font-size:22px;font-weight:800;color:var(--red);}
+.dif-seg-note{font-size:10px;color:var(--muted);margin-top:3px;}
+.dif-pct{font-size:13px;font-weight:700;color:var(--orange);margin-left:8px;}
+
+/* ── GAUGE ── */
+#gaugeWrap{display:flex;flex-direction:column;align-items:center;padding:10px 20px 4px;}
+#gaugeCanvas{max-width:380px;width:100%;display:block;}
+#gaugeOverlay{text-align:center;margin-top:-18px;pointer-events:none;position:relative;z-index:3;}
+#gaugeValue{font:bold 36px 'Segoe UI',sans-serif;color:#fff;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+.gauge-sub{font:11px 'Segoe UI',sans-serif;color:#7a8299;margin-top:4px;}
+#gaugeZone{margin-top:6px;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:4px 18px;border-radius:20px;background:rgba(240,82,82,.18);color:var(--red);border:1px solid rgba(240,82,82,.35);}
+#gaugeZone.zona-atencao{background:rgba(249,115,22,.18);color:var(--orange);border-color:rgba(249,115,22,.35);}
+#gaugeZone.zona-bom{background:rgba(250,204,21,.18);color:var(--yellow);border-color:rgba(250,204,21,.35);}
+#gaugeZone.zona-otimo{background:rgba(132,204,22,.18);color:var(--lime);border-color:rgba(132,204,22,.35);}
+#gaugeZone.zona-excelente{background:rgba(34,197,94,.18);color:var(--green);border-color:rgba(34,197,94,.35);}
+
+/* ── SECTION ── */
+.section-title{font-size:13px;font-weight:700;color:var(--text);border-left:3px solid var(--accent);padding-left:10px;margin-bottom:4px;}
+.section-sub{font-size:11px;color:var(--muted);margin-bottom:12px;padding-left:13px;}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table thead th{background:var(--surface2);color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);}
+.data-table thead th:first-child{text-align:left;}
+.data-table tbody tr{border-bottom:1px solid rgba(46,51,80,.5);transition:background .15s;}
+.data-table tbody tr:hover{background:var(--surface2);}
+.data-table tbody td{padding:9px 12px;text-align:right;vertical-align:middle;}
+.data-table tbody td:first-child{text-align:left;font-weight:600;}
+.data-table tfoot td{padding:9px 12px;text-align:right;font-weight:700;background:var(--surface2);border-top:1px solid var(--border);color:var(--text);}
+.data-table tfoot td:first-child{text-align:left;}
+
+/* acc bar */
+.acc-bar-wrap{display:flex;align-items:center;gap:8px;justify-content:flex-end;}
+.acc-bar{height:6px;border-radius:3px;flex-shrink:0;width:60px;background:var(--surface2);overflow:hidden;}
+.acc-bar-fill{height:100%;border-radius:3px;}
+.acc-text{min-width:44px;text-align:right;font-weight:700;font-size:12px;}
+
+/* badges */
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.badge-CRITICA{background:rgba(240,82,82,.18);color:var(--red);border:1px solid rgba(240,82,82,.35);}
+.badge-ALTA{background:rgba(249,115,22,.18);color:var(--orange);border:1px solid rgba(249,115,22,.35);}
+.badge-MEDIA{background:rgba(250,204,21,.18);color:var(--yellow);border:1px solid rgba(250,204,21,.35);}
+.badge-BAIXA{background:rgba(34,197,94,.18);color:var(--green);border:1px solid rgba(34,197,94,.35);}
+
+/* unit tag */
+.unit-tag{display:inline-block;padding:1px 6px;border-radius:5px;font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;vertical-align:middle;margin-left:4px;}
+.unit-un{background:rgba(79,142,247,.2);color:#7eb3ff;}
+.unit-kg{background:rgba(20,184,166,.2);color:#5fd7cb;}
+
+/* family tags */
+.fam-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.fam-1{background:rgba(79,142,247,.18);color:#7eb3ff;}
+.fam-2{background:rgba(167,139,250,.18);color:#b9a8fa;}
+.fam-3{background:rgba(20,184,166,.18);color:#5fd7cb;}
+.fam-4{background:rgba(244,114,182,.18);color:#f7a8d4;}
+.fam-5{background:rgba(250,204,21,.18);color:var(--yellow);}
+
+/* dep tag */
+.dep-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;font-family:monospace;background:rgba(20,184,166,.12);color:var(--teal);border:1px solid rgba(20,184,166,.2);}
+
+/* chart */
+.chart-box{position:relative;height:240px;}
+.chart-box-tall{position:relative;height:280px;}
+
+/* ── FOOTER ── */
+.dash-footer{font-size:10px;color:var(--muted);text-align:center;padding:14px 0 8px;border-top:1px solid var(--border);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:16px;}
+
+/* ═══════════════════════════════════════════════
+   BARRA TOPO — ANÁLISE DETALHADA
+═══════════════════════════════════════════════ */
+#topAnalysisBanner{
+  position:sticky;top:58px;z-index:49;
+  background:linear-gradient(90deg,rgba(79,142,247,.18) 0%,rgba(124,58,237,.14) 100%);
+  border-bottom:1px solid rgba(79,142,247,.35);
+  padding:9px 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+#topAnalysisBanner .tab-hint{font-size:11px;color:var(--muted2);letter-spacing:.3px;}
+#btnTopAnalise{
+  background:linear-gradient(135deg,#4f8ef7,#7c3aed);
+  color:#fff;border:none;cursor:pointer;
+  border-radius:50px;padding:9px 22px;
+  font-size:13px;font-weight:700;letter-spacing:.4px;
+  box-shadow:0 4px 20px rgba(79,142,247,.4);
+  display:flex;align-items:center;gap:10px;
+  transition:transform .2s,box-shadow .2s;
+}
+#btnTopAnalise:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(79,142,247,.55);}
+#btnTopAnalise .btn-icon{font-size:15px;}
+#btnTopAnalise .btn-badge{
+  background:var(--red);color:#fff;
+  border-radius:20px;padding:1px 8px;font-size:10px;font-weight:800;
+}
+
+/* ═══════════════════════════════════════════════
+   OVERLAY + DRAWER
+═══════════════════════════════════════════════ */
+#drawerOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#drawerOverlay.open{opacity:1;pointer-events:all;}
+
+#drawer{
+  position:fixed;top:0;right:-760px;width:min(760px,96vw);height:100vh;
+  background:var(--surface);border-left:1px solid var(--border);
+  z-index:400;overflow:hidden;display:flex;flex-direction:column;
+  transition:right .35s cubic-bezier(.4,0,.2,1);
+  box-shadow:-16px 0 60px rgba(0,0,0,.6);
+}
+#drawer.open{right:0;}
+
+/* drawer header */
+.drawer-header{
+  padding:18px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface2);flex-shrink:0;
+}
+.drawer-header h2{font-size:15px;font-weight:800;}
+.drawer-header .dh-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+#btnCloseDrawer{
+  background:var(--surface3);border:1px solid var(--border);color:var(--text);
+  width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+#btnCloseDrawer:hover{background:var(--red);}
+
+/* drawer tabs */
+.drawer-tabs{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  padding:0 24px;background:var(--surface2);flex-shrink:0;
+}
+.dtab{
+  padding:10px 18px;font-size:12px;font-weight:600;cursor:pointer;
+  border-bottom:2px solid transparent;color:var(--muted);
+  transition:color .15s,border-color .15s;white-space:nowrap;
+}
+.dtab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.dtab:hover:not(.active){color:var(--text);}
+
+/* drawer body */
+.drawer-body{flex:1;overflow-y:auto;padding:0;}
+.drawer-body::-webkit-scrollbar{width:6px;}
+.drawer-body::-webkit-scrollbar-track{background:var(--surface2);}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* drawer panel */
+.dpanel{display:none;padding:20px 24px;}
+.dpanel.active{display:block;}
+
+/* family section */
+.fam-section{margin-bottom:24px;}
+.fam-section-header{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  padding:12px 14px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  margin-bottom:0;transition:background .15s;
+  user-select:none;
+}
+.fam-section-header:hover{background:var(--surface3);}
+.fam-section-header .fsh-left{display:flex;align-items:center;gap:10px;flex:1;}
+.fam-section-header .fsh-stats{display:flex;gap:16px;font-size:11px;color:var(--muted);}
+.fsh-stat-val{font-weight:700;color:var(--text);}
+.fam-section-header .fsh-arrow{font-size:12px;color:var(--muted);transition:transform .25s;}
+.fam-section-header.open .fsh-arrow{transform:rotate(90deg);}
+.fam-section-body{
+  display:none;border:1px solid var(--border);border-top:none;
+  border-radius:0 0 10px 10px;overflow:hidden;
+}
+.fam-section-body.open{display:block;}
+
+/* mini table */
+.mini-table{width:100%;border-collapse:collapse;font-size:11px;}
+.mini-table thead th{
+  background:#1e2235;color:var(--muted);
+  font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;
+  padding:8px 12px;text-align:right;border-bottom:1px solid var(--border);
+}
+.mini-table thead th:first-child{text-align:left;}
+.mini-table thead th:nth-child(2){text-align:left;}
+.mini-table tbody tr{border-bottom:1px solid rgba(46,51,80,.4);transition:background .1s;}
+.mini-table tbody tr:hover{background:var(--surface3);}
+.mini-table tbody tr:last-child{border-bottom:none;}
+.mini-table td{padding:8px 12px;text-align:right;vertical-align:middle;}
+.mini-table td:first-child{text-align:left;font-family:monospace;font-size:11px;font-weight:700;color:var(--accent2);}
+.mini-table td:nth-child(2){text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;}
+
+/* diff pill */
+.diff-pos{color:var(--red);font-weight:700;}
+.diff-neg{color:var(--teal);font-weight:700;}
+
+/* ── SUGESTÕES ── */
+.sug-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;margin-bottom:14px;
+}
+.sug-card-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+.sug-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
+.sug-title{font-size:13px;font-weight:700;}
+.sug-subtitle{font-size:11px;color:var(--muted);margin-top:2px;}
+.sug-steps{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.sug-steps li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:12px;color:var(--muted2);line-height:1.5;
+}
+.sug-steps li .step-num{
+  flex-shrink:0;width:20px;height:20px;border-radius:50%;
+  background:rgba(79,142,247,.2);color:var(--accent);
+  font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;
+}
+.sug-priority{
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;
+  margin-left:8px;vertical-align:middle;
+}
+.sug-p-alta{background:rgba(240,82,82,.18);color:var(--red);border:1px solid rgba(240,82,82,.3);}
+.sug-p-media{background:rgba(249,115,22,.18);color:var(--orange);border:1px solid rgba(249,115,22,.3);}
+.sug-p-baixa{background:rgba(34,197,94,.18);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+
+/* search box */
+.search-box{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;color:var(--text);font-size:12px;
+  outline:none;margin-bottom:16px;
+  transition:border-color .2s;
+}
+.search-box:focus{border-color:var(--accent);}
+.search-box::placeholder{color:var(--muted);}
+
+/* stat pills row */
+.stat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.stat-pill{
+  background:var(--surface3);border:1px solid var(--border);
+  border-radius:20px;padding:5px 12px;font-size:11px;
+  display:flex;align-items:center;gap:6px;
+}
+.stat-pill .sp-val{font-weight:800;}
+.stat-pill .sp-lbl{color:var(--muted);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .grid-2{grid-template-columns:1fr;}
+  header{flex-direction:column;text-align:center;}
+  .header-meta{text-align:center;}
+  #topAnalysisBanner{padding:8px 14px;}
+}
+@media(max-width:560px){
+  main{padding:14px;}
+  #topAnalysisBanner .tab-hint{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ HEADER ══════ -->
+<header>
+  <div class="header-logos">
+    <div class="logo-senior">
+      <svg width="96" height="30" viewBox="0 0 96 30" fill="none">
+        <path d="M6 23C6 23 8 19 10 17C12 15 12 13 10 11C8 9 8 7 10 5" stroke="#1a9c82" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <path d="M10 23C10 23 12 19 14 17C16 15 16 13 14 11C12 9 12 7 14 5" stroke="#1a9c82" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <text x="22" y="21" font-family="'Segoe UI',sans-serif" font-size="16" font-weight="600" fill="#1a9c82" letter-spacing="0.5">Senior</text>
+      </svg>
+    </div>
+    <div class="partner-sep">×</div>
+    <div class="logo-ybera">
+      <svg width="122" height="30" viewBox="0 0 122 30" fill="none">
+        <text x="2" y="21" font-family="'Segoe UI',Arial,sans-serif" font-size="16" font-weight="800" fill="#d1d5db" letter-spacing="0.5">YBERA</text>
+        <text x="63" y="21" font-family="'Segoe UI',Arial,sans-serif" font-size="13" font-weight="400" fill="#9ca3af" letter-spacing="1">GROUP</text>
+        <text x="110" y="13" font-family="serif" font-size="8" fill="#9ca3af">®</text>
+      </svg>
+    </div>
+  </div>
+  <div class="header-title">
+    <h1>Dashboard · Acuracidade de Estoque</h1>
+    <div class="subtitle">Cruzamento de estoque entre WMS × ERP · GYP / YBERA · 20/05/2026</div>
+  </div>
+  <div class="header-meta">
+    <div>Referência: <strong>20/05/2026</strong></div>
+    <div>Depósitos: <strong>1-100 · 1010 · 1100–1103 · 1200 · 1203 · 3100</strong></div>
+    <div>UN: M.Prima · Embalagem · P.Acabado · M.Apoio &nbsp;|&nbsp; KG: Granel</div>
+  </div>
+</header>
+
+<!-- ══════ BARRA TOPO — ANÁLISE DETALHADA ══════ -->
+<div id="topAnalysisBanner">
+  <span class="tab-hint">🔎 Explore os SKUs com maiores divergências, filtre por família, depósito e criticidade</span>
+  <a href="analise_skus.html" style="text-decoration:none;">
+    <button id="btnTopAnalise">Análise Detalhada de SKUs</button>
+  </a>
+</div>
+
+<!-- ══════ MAIN ══════ -->
+<main>
+
+  <!-- ── GAUGE + KPIs ── -->
+  <div class="grid-2" style="align-items:stretch">
+    <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="card-title"><span class="dot"></span>Acuracidade entre sistemas</div>
+      <div id="gaugeWrap">
+        <canvas id="gaugeCanvas" width="400" height="220"></canvas>
+        <div id="gaugeOverlay">
+          <div id="gaugeValue">43,2 %</div>
+        </div>
+        <div id="gaugeZone" style="margin-top:8px;">RUIM</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;gap:12px;align-content:start;">
+      <div class="kpi-card">
+        <div class="kpi-label">SKUs Comparados</div>
+        <div class="kpi-value" style="color:var(--accent)">1.138</div>
+        <div class="kpi-sub">Produtos cruzados ERP × WMS</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">SKUs Sem Diferença</div>
+        <div class="kpi-value" style="color:var(--green)">4</div>
+        <div class="kpi-sub">Acurácia SKU: <strong style="color:var(--red)">0,35%</strong></div>
+      </div>
+      <div class="saldo-card">
+        <div class="saldo-label">Saldo Total ERP</div>
+        <div class="saldo-row">
+          <div class="saldo-seg">
+            <div class="saldo-seg-label">Unidades <span class="unit-tag unit-un">UN</span></div>
+            <div class="saldo-seg-value" style="color:var(--accent)">23.965.140</div>
+            <div class="saldo-seg-note">Embalagem · P.Acabado · Granel</div>
+          </div>
+          <div class="saldo-seg">
+            <div class="saldo-seg-label">Massa <span class="unit-tag unit-kg">KG</span></div>
+            <div class="saldo-seg-value" style="color:var(--teal)">145.213</div>
+            <div class="saldo-seg-note">Matéria-Prima</div>
+          </div>
+        </div>
+      </div>
+      <div class="saldo-card">
+        <div class="saldo-label">Saldo Total WMS</div>
+        <div class="saldo-row">
+          <div class="saldo-seg">
+            <div class="saldo-seg-label">Unidades <span class="unit-tag unit-un">UN</span></div>
+            <div class="saldo-seg-value" style="color:var(--accent)">10.681.635</div>
+            <div class="saldo-seg-note">Embalagem · P.Acabado · Granel</div>
+          </div>
+          <div class="saldo-seg">
+            <div class="saldo-seg-label">Massa <span class="unit-tag unit-kg">KG</span></div>
+            <div class="saldo-seg-value" style="color:var(--teal)">120.199</div>
+            <div class="saldo-seg-note">Matéria-Prima</div>
+          </div>
+        </div>
+      </div>
+      <div class="dif-card">
+        <div class="dif-label">Diferença Absoluta Total (ERP – WMS)</div>
+        <div class="dif-row">
+          <div class="dif-seg">
+            <div class="dif-seg-unit">Unidades <span class="unit-tag unit-un">UN</span></div>
+            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+              <div class="dif-seg-val">13.283.505</div>
+              <div class="dif-pct">–55,4%</div>
+            </div>
+            <div class="dif-seg-note">ERP maior que WMS físico<br>Embalagem · P.Acabado · Granel</div>
+          </div>
+          <div class="dif-seg">
+            <div class="dif-seg-unit">Massa <span class="unit-tag unit-kg">KG</span></div>
+            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+              <div class="dif-seg-val">25.014 KG</div>
+              <div class="dif-pct">–17,2%</div>
+            </div>
+            <div class="dif-seg-note">ERP: 145.213 KG &nbsp;|&nbsp; WMS: 120.199 KG<br>Matéria-Prima — ERP maior que WMS</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FAMÍLIAS ── -->
+  <div>
+    <div class="section-title">Acuracidade por Família (Tipo Código)</div>
+    <div class="section-sub">Classificação pelo 1º dígito do SKU</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--purple)"></span>Saldo ERP vs WMS por Família</div>
+        <div class="chart-box"><canvas id="chartFamSaldo"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--green)"></span>% Acuracidade por Família</div>
+        <div class="chart-box"><canvas id="chartFamAcc"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--pink)"></span>Detalhamento por Família</div>
+    <table class="data-table">
+      <thead><tr>
+        <th>Família</th><th>SKUs WMS</th><th>SKUs ERP</th><th>Δ SKU</th>
+        <th>Saldo WMS</th><th>Saldo ERP</th><th>Diferença</th><th>Acuracidade</th>
+      </tr></thead>
+      <tbody id="tbodyFam"></tbody>
+      <tfoot id="tfootFam"></tfoot>
+    </table>
+  </div>
+
+  <!-- ── DEPÓSITOS ── -->
+  <div>
+    <div class="section-title">Acuracidade por Depósito</div>
+    <div class="section-sub">DEP 3100 (fiscal) = soma WMS Viana (1100+1020+1103+1102+1101)</div>
+    <!-- legenda nomes -->
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;padding-left:2px">
+      <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-right:4px">Legenda:</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1-100</strong> · DEP. VIANA G3</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1010</strong> · RETENÇÃO</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1100</strong> · DEP. VIANA G9</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1101</strong> · AVARIA / BLOQUEADO DEP. VIANA G9</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1102</strong> · VENCIDOS DEP. VIANA G9</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1103</strong> · PERDAS / INVENTÁRIO DEP. VIANA G9</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1200</strong> · DEP. GUARAPARI</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">1203</strong> · PERDAS / INVENTÁRIO DEP. GUARAPARI</span>
+      <span style="color:var(--border)">·</span>
+      <span style="font-size:10px;color:var(--muted2)"><strong style="color:var(--teal)">3100</strong> · FISCAL DEP. VIANA</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--teal)"></span>Saldo ERP vs WMS por Depósito</div>
+        <div class="chart-box-tall"><canvas id="chartDepSaldo"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:var(--lime)"></span>% Acuracidade por Depósito</div>
+        <div class="chart-box-tall"><canvas id="chartDepAcc"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--teal)"></span>Detalhamento por Depósito</div>
+    <table class="data-table">
+      <thead><tr>
+        <th>Depósito</th><th>SKUs WMS</th><th>SKUs ERP</th><th>Δ SKU</th>
+        <th>Saldo WMS</th><th>Saldo ERP</th><th>Diferença</th><th>Acuracidade</th><th>Criticidade</th>
+      </tr></thead>
+      <tbody id="tbodyDep"></tbody>
+      <tfoot id="tfootDep"></tfoot>
+    </table>
+  </div>
+
+  <div class="dash-footer">
+    <svg width="56" height="18" viewBox="0 0 96 30" fill="none" opacity=".5">
+      <path d="M6 23C6 23 8 19 10 17C12 15 12 13 10 11C8 9 8 7 10 5" stroke="#1a9c82" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M10 23C10 23 12 19 14 17C16 15 16 13 14 11C12 9 12 7 14 5" stroke="#1a9c82" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <text x="20" y="21" font-family="'Segoe UI',sans-serif" font-size="15" font-weight="600" fill="#1a9c82">Senior</text>
+    </svg>
+    <span style="color:var(--border)">|</span>
+    <span>Dashboard · auditoria_erp_wms_RESUMIDO.xlsx · 20/05/2026</span>
+    <span style="color:var(--border)">|</span>
+    <svg width="76" height="18" viewBox="0 0 122 30" fill="none" opacity=".5">
+      <text x="2" y="21" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="800" fill="#6b7280">YBERA</text>
+      <text x="58" y="21" font-family="'Segoe UI',Arial,sans-serif" font-size="13" fill="#6b7280" letter-spacing="1">GROUP</text>
+      <text x="107" y="13" font-family="serif" font-size="8" fill="#6b7280">®</text>
+    </svg>
+  </div>
+</main>
+
+<!-- ══════ OVERLAY ══════ -->
+<div id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- ══════ DRAWER ══════ -->
+<div id="drawer">
+  <div class="drawer-header">
+    <div>
+      <h2>📊 Análise Detalhada de Divergências</h2>
+      <div class="dh-sub">Top SKUs por família · Depósito · Sugestões de recuperação de acuracidade</div>
+    </div>
+    <button id="btnCloseDrawer" onclick="closeDrawer()">✕</button>
+  </div>
+
+  <div class="drawer-tabs">
+    <div class="dtab active" onclick="switchTab('divFam')">Por Família</div>
+    <div class="dtab" onclick="switchTab('divDep')">Por Depósito</div>
+    <div class="dtab" onclick="switchTab('divSug')">💡 Sugestões de Ação</div>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- ── TAB 1: POR FAMÍLIA ── -->
+    <div id="divFam" class="dpanel active">
+      <input class="search-box" id="searchFam" placeholder="🔍  Buscar SKU ou descrição..." oninput="filterFam(this.value)"/>
+
+      <div class="stat-pills">
+        <div class="stat-pill"><span class="sp-val" style="color:var(--red)">921</span><span class="sp-lbl">SKUs divergentes</span></div>
+        <div class="stat-pill"><span class="sp-val" style="color:var(--orange)">916</span><span class="sp-lbl">Criticidade CRITICA/ALTA</span></div>
+        <div class="stat-pill"><span class="sp-val" style="color:var(--purple)">93%</span><span class="sp-lbl">Embalagem da divergência</span></div>
+      </div>
+
+      <div id="famSections"></div>
+    </div>
+
+    <!-- ── TAB 2: POR DEPÓSITO ── -->
+    <div id="divDep" class="dpanel">
+      <div style="margin-bottom:16px;font-size:12px;color:var(--muted)">Top 8 SKUs mais divergentes por depósito. Clique no depósito para expandir.</div>
+      <div id="depSections"></div>
+    </div>
+
+    <!-- ── TAB 3: SUGESTÕES ── -->
+    <div id="divSug" class="dpanel">
+      <div style="margin-bottom:18px;font-size:12px;color:var(--muted)">
+        Plano de ação baseado nos padrões de divergência identificados na auditoria de <strong style="color:var(--text)">20/05/2026</strong>.
+        Total de <strong style="color:var(--red)">921 SKUs</strong> com divergência em <strong style="color:var(--text)">9 depósitos</strong>.
+      </div>
+
+      <div class="sug-card">
+        <div class="sug-card-header">
+          <div class="sug-icon">🚨</div>
+          <div>
+            <div class="sug-title">Inventário Rotativo Imediato — Embalagens Críticas<span class="sug-priority sug-p-alta">URGENTE</span></div>
+            <div class="sug-subtitle">805 SKUs de embalagem com divergência · Foco em DEP 1100 e DEP 3100</div>
+          </div>
+        </div>
+        <ul class="sug-steps">
+          <li><div class="step-num">1</div>Priorizar contagem física dos 20 SKUs com maior diferença absoluta (SLEEVE LACRE, SELOS DE INDUÇÃO, TAMPAS DISK TOP) — estes somam mais de 5 milhões de unidades de divergência.</li>
+          <li><div class="step-num">2</div>Verificar no WMS se houve entradas confirmadas sem NF correspondente no ERP Senior — comparar datas de recebimento WMS × lançamento ERP.</li>
+          <li><div class="step-num">3</div>Checar se há lotes bloqueados ou em quarentena no ERP que não estão refletidos no WMS como indisponíveis.</li>
+          <li><div class="step-num">4</div>Conciliar os SKUs com WMS = 0 e ERP > 0 no DEP 1-100 (ex: SLEEVE LACRE MIRRA 60ML: +116.470 UN) — possível consumo não baixado no ERP.</li>
+        </ul>
+      </div>
+
+      <div class="sug-card">
+        <div class="sug-card-header">
+          <div class="sug-icon">📦</div>
+          <div>
+            <div class="sug-title">Regularizar Produtos Acabados — DEP 1100 e 3100<span class="sug-priority sug-p-alta">ALTA</span></div>
+            <div class="sug-subtitle">64 SKUs de Produto Acabado · Acuracidade: 34,4%</div>
+          </div>
+        </div>
+        <ul class="sug-steps">
+          <li><div class="step-num">1</div>FASHION GOLD ESCOVA PROGRESSIVA (4100050004): ERP 20.075 × WMS 12.011 — verificar se há saídas de produção lançadas no ERP mas não confirmadas no WMS como expedição.</li>
+          <li><div class="step-num">2</div>FASHION GOLD 100ML CONDICIONADOR (4100010001): ERP 6.591 × WMS 114 — diferença de 98,3%; provavelmente saldo residual no ERP de lote antigo já consumido/expedido.</li>
+          <li><div class="step-num">3</div>FASHION GOLD TÔNICO 150ML (4100010003): WMS tem 6.452 UN a MAIS que ERP — verificar se entrada de produção foi registrada no WMS mas ainda não integrou ao ERP.</li>
+          <li><div class="step-num">4</div>Revisar ordens de produção encerradas no ERP sem confirmação equivalente no WMS para todos os SKUs de Produto Acabado.</li>
+        </ul>
+      </div>
+
+      <div class="sug-card">
+        <div class="sug-card-header">
+          <div class="sug-icon">🧪</div>
+          <div>
+            <div class="sug-title">Matéria-Prima — Reconciliação de Consumo<span class="sug-priority sug-p-media">MÉDIA</span></div>
+            <div class="sug-subtitle">282 SKUs no ERP × 215 no WMS · Acuracidade: 82,8%</div>
+          </div>
+        </div>
+        <ul class="sug-steps">
+          <li><div class="step-num">1</div>67 SKUs presentes no ERP mas ausentes no WMS — verificar se são materiais que ficam fisicamente fora da área controlada pelo WMS (área produtiva, pesagem).</li>
+          <li><div class="step-num">2</div>ALB 380/TECH15/FORT VEG-13 (1000010024) no DEP 1200: diferença de 2.199 unidades (26,4%) — conferir saldo físico e rastrear movimentações de consumo no ERP sem baixa no WMS.</li>
+          <li><div class="step-num">3</div>Revisar integração do DEP 1200 (Guarapari): este depósito tem acuracidade de 89,2% mas 7 SKUs com divergência de criticidade CRITICA.</li>
+        </ul>
+      </div>
+
+      <div class="sug-card">
+        <div class="sug-card-header">
+          <div class="sug-icon">🏭</div>
+          <div>
+            <div class="sug-title">DEP 1-100 — Saldo Fantasma no ERP<span class="sug-priority sug-p-alta">URGENTE</span></div>
+            <div class="sug-subtitle">Acuracidade: 2,6% · Maior divergência proporcional</div>
+          </div>
+        </div>
+        <ul class="sug-steps">
+          <li><div class="step-num">1</div>ERP registra 154.777 itens neste depósito, WMS registra apenas 3.961 — diferença de 97,4%. Verificar se este depósito ainda está ativo no WMS ou se foi descomissionado sem baixa no ERP.</li>
+          <li><div class="step-num">2</div>SLEEVE LACRE MIRRA 60ML e SELO PP-143GYP com ERP > 0 e WMS = 0: solicitar contagem física imediata para confirmar existência física desses itens.</li>
+          <li><div class="step-num">3</div>Avaliar se é necessário fazer estorno de saldo no ERP ou transferência contábil para regularizar o depósito.</li>
+        </ul>
+      </div>
+
+      <div class="sug-card">
+        <div class="sug-card-header">
+          <div class="sug-icon">⚙️</div>
+          <div>
+            <div class="sug-title">Processos de Integração WMS → ERP<span class="sug-priority sug-p-media">PREVENTIVO</span></div>
+            <div class="sug-subtitle">Ações sistêmicas para evitar reincidência</div>
+          </div>
+        </div>
+        <ul class="sug-steps">
+          <li><div class="step-num">1</div>Implementar conciliação diária automática: comparar saldos ERP × WMS toda manhã e gerar alerta para SKUs com Δ% > 5% antes da abertura do turno.</li>
+          <li><div class="step-num">2</div>Revisar regra de conversão KG×1000 no Granel: WMS físico registra 433 KG mas ERP convertido mostra apenas 126 KG — possível falha no mapeamento de unidade de medida na integração.</li>
+          <li><div class="step-num">3</div>Estabelecer SLA para confirmação de recebimento no ERP: toda entrada confirmada no WMS deve ser registrada no ERP em até 2 horas para reduzir divergências de trânsito.</li>
+          <li><div class="step-num">4</div>Criar rotina de "zeramento de fantasmas": SKUs com ERP > 0 e WMS = 0 por mais de 30 dias devem ser revisados e, se confirmada ausência física, ter saldo zerado no ERP com justificativa de ajuste.</li>
+        </ul>
+      </div>
+
+    </div><!-- /divSug -->
+  </div><!-- /drawer-body -->
+</div><!-- /drawer -->
+
+<!-- ══════════════════════════════════════
+   SCRIPTS
+══════════════════════════════════════ -->
+<script>
+/* ── NOMES DOS DEPÓSITOS ── */
+const DEP_NAMES = {
+  '1-100': 'DEP. VIANA G3',
+  '1010':  'RETENÇÃO',
+  '1100':  'DEP. VIANA G9',
+  '1101':  'AVARIA / BLOQUEADO DEP. VIANA G9',
+  '1102':  'VENCIDOS DEP. VIANA G9',
+  '1103':  'PERDAS / INVENTÁRIO DEP. VIANA G9',
+  '1200':  'DEP. GUARAPARI',
+  '1203':  'PERDAS / INVENTÁRIO DEP. GUARAPARI',
+  '3100':  'FISCAL DEP. VIANA',
+};
+function depLabel(cod){ return DEP_NAMES[cod] ? `${cod} · <span style="color:var(--muted2);font-weight:400">${DEP_NAMES[cod]}</span>` : cod; }
+
+/* ── DATA ── */
+const GLOBAL_ACC = 0.432;
+const FAMILIAS = [
+  {fam:'MATÉRIA-PRIMA',   tag:'fam-1',unit:'UN',skuWMS:215,skuERP:282,saldoWMS:120199,  saldoERP:145213,  acc:0.8277},
+  {fam:'EMBALAGEM',       tag:'fam-2',unit:'UN',skuWMS:462,skuERP:556,saldoWMS:10536409,saldoERP:23543788,acc:0.4475},
+  {fam:'GRANEL',          tag:'fam-3',unit:'KG', skuWMS:3,  skuERP:91, saldoWMS:433,    saldoERP:126,     acc:0.0034},
+  {fam:'PRODUTO ACABADO', tag:'fam-4',unit:'UN',skuWMS:64, skuERP:198,saldoWMS:144793,  saldoERP:421226,  acc:0.3437},
+  {fam:'MATERIAL APOIO',  tag:'fam-5',unit:'UN',skuWMS:7,  skuERP:8,  saldoWMS:1356,   saldoERP:2764,    acc:0.4906},
+];
+const DEPOSITOS = [
+  {dep:'1-100',skuWMS:41, skuERP:6,  saldoWMS:3961.28,  saldoERP:154776.7,  acc:0.0256,crit:'CRITICA'},
+  {dep:'1010', skuWMS:1,  skuERP:378,saldoWMS:0.5,       saldoERP:1525.77,   acc:0.0003,crit:'CRITICA'},
+  {dep:'1100', skuWMS:539,skuERP:537,saldoWMS:9550676.6, saldoERP:9911534,   acc:0.9636,crit:'CRITICA'},
+  {dep:'1101', skuWMS:2,  skuERP:2,  saldoWMS:6315,      saldoERP:5898,      acc:0.9293,crit:'ALTA'},
+  {dep:'1102', skuWMS:10, skuERP:10, saldoWMS:11760,     saldoERP:9410,      acc:0.7503,crit:'CRITICA'},
+  {dep:'1103', skuWMS:89, skuERP:88, saldoWMS:237362,    saldoERP:234970,    acc:0.9898,crit:'CRITICA'},
+  {dep:'1200', skuWMS:215,skuERP:214,saldoWMS:57809.34,  saldoERP:64780.91,  acc:0.8924,crit:'CRITICA'},
+  {dep:'1203', skuWMS:20, skuERP:20, saldoWMS:50.83,     saldoERP:50.83,     acc:1.0000,crit:'BAIXA'},
+  {dep:'3100', skuWMS:545,skuERP:546,saldoWMS:9806113.6, saldoERP:10370825.6,acc:0.9455,crit:'CRITICA'},
+];
+
+/* Top SKUs por família — dados reais do arquivo FINAL_v2 */
+const TOP_POR_FAMILIA = {
+  'EMBALAGEM':[
+    {sku:'2000060229',desc:'SLEEVE LACRE GARGALO MIRRA 60ML 4,7x6,6',dep:'1-100',erp:116470,wms:0,dif:116470,pct:100.0,crit:'CRITICA'},
+    {sku:'2000080025',desc:'ANEL PANTONE LARANJA 172C 24410 MIRRA',dep:'1100',erp:71160,wms:11573,dif:59587,pct:83.7,crit:'CRITICA'},
+    {sku:'2000070009',desc:'SELO INDUÇÃO SEGURANÇA 21,1MM PP143',dep:'3100',erp:165065,wms:110608,dif:54457,pct:33.0,crit:'CRITICA'},
+    {sku:'2000010109',desc:'TAMPA RETA 24410 BRANCA C/ DISCO POLEXAN',dep:'1100',erp:69291,wms:14911,dif:54380,pct:78.5,crit:'CRITICA'},
+    {sku:'2000070014',desc:'SELO INDUÇÃO SEGURANÇA PP-143GYP 93MM',dep:'1-100',erp:38111,wms:0,dif:38111,pct:100.0,crit:'CRITICA'},
+    {sku:'2000010201',desc:'TAMPA OCTAG POTE TORRE 2143C DISCOVERY',dep:'1100',erp:54249,wms:18251,dif:35998,pct:66.4,crit:'CRITICA'},
+    {sku:'2000010206',desc:'TAMPA OCTAG POTE TORRE 2111C BOTULINICA',dep:'3100',erp:55392,wms:19394,dif:35998,pct:65.0,crit:'CRITICA'},
+    {sku:'2750020047',desc:'FRASCO FASHION GOLD BRANCO 150G SELANTE',dep:'3100',erp:36317,wms:765,dif:35552,pct:97.9,crit:'CRITICA'},
+    {sku:'2000010207',desc:'TAMPA OCTAG POTE TORRE 2333C DETOX',dep:'3100',erp:63293,wms:29095,dif:34198,pct:54.0,crit:'CRITICA'},
+    {sku:'2000040256',desc:'BISNAGA FASHION KIDS CREME PENTEAR 200G',dep:'1100',erp:39641,wms:71081,dif:-31440,pct:-79.3,crit:'CRITICA'},
+  ],
+  'PRODUTO_ACABADO':[
+    {sku:'4100050004',desc:'FASHION GOLD ESCOVA PROGRESSIVA SELANTE',dep:'1100',erp:20075,wms:12011,dif:8064,pct:40.2,crit:'CRITICA'},
+    {sku:'4100010001',desc:'FASHION GOLD 100ML CONDICIONADOR',dep:'1100',erp:6591,wms:114,dif:6477,pct:98.3,crit:'CRITICA'},
+    {sku:'4100010003',desc:'FASHION GOLD TÔNICO 150ML',dep:'3100',erp:26133,wms:32585,dif:-6452,pct:-24.7,crit:'CRITICA'},
+    {sku:'4100120003',desc:'YBERA FASHION GOLD CUIDADOS PROFUNDOS',dep:'1100',erp:4020,wms:0,dif:4020,pct:100.0,crit:'CRITICA'},
+    {sku:'4100010005',desc:'FASHION GOLD SHAMPOO LIMPEZA 300ML',dep:'3100',erp:3150,wms:1800,dif:1350,pct:42.9,crit:'ALTA'},
+  ],
+  'MATERIA_PRIMA':[
+    {sku:'1000010024',desc:'ALB 380 / TECH15 / FORT VEG-13',dep:'1200',erp:8341,wms:6142,dif:2199,pct:26.4,crit:'CRITICA'},
+    {sku:'1000010154',desc:'CLORETO CETIL TRIMETIL AMONIO 50%',dep:'1200',erp:3416,wms:2422,dif:994,pct:29.1,crit:'ALTA'},
+    {sku:'1000010725',desc:'SILICONE SF 1214 (DC1411)',dep:'1200',erp:1408,wms:518,dif:891,pct:63.3,crit:'CRITICA'},
+    {sku:'1000010720',desc:'SILICONE DC-200 / DIMETHICONE 1000cST',dep:'1-100',erp:0,wms:810,dif:-810,pct:0,crit:'ALTA'},
+    {sku:'1000010310',desc:'QUERATINA HIDROLISADA VEGETAL',dep:'1200',erp:980,wms:420,dif:560,pct:57.1,crit:'CRITICA'},
+  ],
+  'MATERIAL_APOIO':[
+    {sku:'5000010015',desc:'PENTE PROFISSIONAL 335',dep:'1010',erp:1,wms:0,dif:1,pct:100.0,crit:'CRITICA'},
+    {sku:'5000010019',desc:'CAPA DE CORTE NYLON BOTÃO',dep:'1010',erp:1,wms:0,dif:1,pct:100.0,crit:'CRITICA'},
+    {sku:'5000010012',desc:'TIGELA P/ TINTURA GRADUADA 250ML',dep:'1010',erp:1,wms:0,dif:1,pct:100.0,crit:'CRITICA'},
+    {sku:'5000010013',desc:'TOUCA METALQUENTE',dep:'1010',erp:1,wms:0,dif:1,pct:100.0,crit:'CRITICA'},
+    {sku:'5000010011',desc:'PINCEL TAM.G PROFISSIONAL',dep:'1010',erp:1,wms:0,dif:1,pct:100.0,crit:'CRITICA'},
+  ],
+};
+
+/* Top SKUs por depósito */
+const TOP_POR_DEP = {
+  '1-100':[
+    {sku:'2000060229',desc:'SLEEVE LACRE GARGALO MIRRA 60ML',fam:'EMBALAGEM',erp:116470,wms:0,dif:116470,pct:100,crit:'CRITICA'},
+    {sku:'2000070014',desc:'SELO INDUÇÃO PP-143GYP 93MM',fam:'EMBALAGEM',erp:38111,wms:0,dif:38111,pct:100,crit:'CRITICA'},
+    {sku:'1000010720',desc:'SILICONE DC-200',fam:'MAT.PRIMA',erp:0,wms:810,dif:-810,pct:0,crit:'ALTA'},
+    {sku:'1000010725',desc:'SILICONE SF 1214 (DC1411)',fam:'MAT.PRIMA',erp:0,wms:891,dif:-891,pct:0,crit:'ALTA'},
+  ],
+  '1100':[
+    {sku:'2000080025',desc:'ANEL PANTONE LARANJA 172C MIRRA',fam:'EMBALAGEM',erp:71160,wms:11573,dif:59587,pct:83.7,crit:'CRITICA'},
+    {sku:'2000010109',desc:'TAMPA RETA 24410 BRANCA',fam:'EMBALAGEM',erp:69291,wms:14911,dif:54380,pct:78.5,crit:'CRITICA'},
+    {sku:'2000010201',desc:'TAMPA OCTAG POTE TORRE 2143C',fam:'EMBALAGEM',erp:54249,wms:18251,dif:35998,pct:66.4,crit:'CRITICA'},
+    {sku:'2000040256',desc:'BISNAGA FASHION KIDS 200G',fam:'EMBALAGEM',erp:39641,wms:71081,dif:-31440,pct:-79.3,crit:'CRITICA'},
+    {sku:'2000010242',desc:'TAMPA FLIP TOP CRONOGRAMA LOIRO',fam:'EMBALAGEM',erp:15355,wms:46248,dif:-30893,pct:-201.2,crit:'CRITICA'},
+    {sku:'4100050004',desc:'FASHION GOLD ESCOVA PROGRESSIVA',fam:'P.ACABADO',erp:20075,wms:12011,dif:8064,pct:40.2,crit:'CRITICA'},
+    {sku:'4100010001',desc:'FASHION GOLD CONDICIONADOR 100ML',fam:'P.ACABADO',erp:6591,wms:114,dif:6477,pct:98.3,crit:'CRITICA'},
+    {sku:'4100120003',desc:'YBERA FASHION GOLD CUIDADOS PROF.',fam:'P.ACABADO',erp:4020,wms:0,dif:4020,pct:100,crit:'CRITICA'},
+  ],
+  '3100':[
+    {sku:'2000070009',desc:'SELO INDUÇÃO 21,1MM PP143',fam:'EMBALAGEM',erp:165065,wms:110608,dif:54457,pct:33.0,crit:'CRITICA'},
+    {sku:'2000080025',desc:'ANEL PANTONE LARANJA 172C MIRRA',fam:'EMBALAGEM',erp:66577,wms:11573,dif:55004,pct:82.6,crit:'CRITICA'},
+    {sku:'2000010109',desc:'TAMPA RETA 24410 BRANCA',fam:'EMBALAGEM',erp:59288,wms:21576,dif:37712,pct:63.6,crit:'CRITICA'},
+    {sku:'2000010207',desc:'TAMPA OCTAG POTE TORRE 2333C DETOX',fam:'EMBALAGEM',erp:63293,wms:29095,dif:34198,pct:54.0,crit:'CRITICA'},
+    {sku:'2000040256',desc:'BISNAGA FASHION KIDS 200G',fam:'EMBALAGEM',erp:39641,wms:71081,dif:-31440,pct:-79.3,crit:'CRITICA'},
+    {sku:'4100010003',desc:'FASHION GOLD TÔNICO 150ML',fam:'P.ACABADO',erp:26133,wms:32585,dif:-6452,pct:-24.7,crit:'CRITICA'},
+  ],
+  '1200':[
+    {sku:'1000010024',desc:'ALB 380/TECH15/FORT VEG-13',fam:'MAT.PRIMA',erp:8341,wms:6142,dif:2199,pct:26.4,crit:'CRITICA'},
+    {sku:'1000010154',desc:'CLORETO CETIL TRIMETIL AMONIO 50%',fam:'MAT.PRIMA',erp:3416,wms:2422,dif:994,pct:29.1,crit:'ALTA'},
+    {sku:'1000010725',desc:'SILICONE SF 1214 (DC1411)',fam:'MAT.PRIMA',erp:1408,wms:518,dif:891,pct:63.3,crit:'CRITICA'},
+    {sku:'1000010310',desc:'QUERATINA HIDROLISADA VEGETAL',fam:'MAT.PRIMA',erp:980,wms:420,dif:560,pct:57.1,crit:'CRITICA'},
+  ],
+  '1102':[
+    {sku:'2000070011',desc:'SELO INDUÇÃO PP143 23,2MM',fam:'EMBALAGEM',erp:13980,wms:11760,dif:2220,pct:15.9,crit:'MEDIA'},
+    {sku:'2000010098',desc:'VALVULA SPRAY LILAS PANT 3575C',fam:'EMBALAGEM',erp:11500,wms:9800,dif:1700,pct:14.8,crit:'MEDIA'},
+  ],
+  '1103':[
+    {sku:'2000070002',desc:'SELO INDUÇÃO 27,0MM PEAD',fam:'EMBALAGEM',erp:24380,wms:22150,dif:2230,pct:9.1,crit:'MEDIA'},
+    {sku:'2000010160',desc:'TAMPA DISK TOP 24/410 BRANCA',fam:'EMBALAGEM',erp:18600,wms:16800,dif:1800,pct:9.7,crit:'MEDIA'},
+  ],
+};
+
+/* ── HELPERS ── */
+const fmtN   = v=>Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0});
+const fmtPct = v=>(v*100).toFixed(1).replace('.',',')+' %';
+function accColor(v){
+  if(v>=.95)return'#22c55e';if(v>=.85)return'#84cc16';
+  if(v>=.70)return'#facc15';if(v>=.50)return'#f97316';return'#f05252';
+}
+function accBarHTML(v){
+  const c=accColor(v),pct=Math.max(0,Math.min(1,v));
+  return`<div class="acc-bar-wrap"><div class="acc-bar"><div class="acc-bar-fill" style="width:${pct*100}%;background:${c}"></div></div><span class="acc-text" style="color:${c}">${fmtPct(v)}</span></div>`;
+}
+
+/* ── GAUGE ── */
+(function(){
+  const canvas=document.getElementById('gaugeCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H-30;
+  const R=Math.min(W,H*2)*0.46,r0=R*0.55;
+  // Degradê suave — 120 fatias interpolando vermelho → laranja → amarelo → verde
+  const stops=[
+    {t:0,   r:239,g:68, b:68},
+    {t:0.25,r:249,g:115,b:22},
+    {t:0.5, r:250,g:204,b:21},
+    {t:0.75,r:132,g:204,b:22},
+    {t:1,   r:34, g:197,b:94}
+  ];
+  function lerpClr(t){
+    let i=0;
+    for(let j=0;j<stops.length-1;j++){if(t>=stops[j].t)i=j;}
+    const a=stops[i],b=stops[i+1]||stops[i],f=b===a?0:(t-a.t)/(b.t-a.t);
+    return`rgb(${Math.round(a.r+(b.r-a.r)*f)},${Math.round(a.g+(b.g-a.g)*f)},${Math.round(a.b+(b.b-a.b)*f)})`;
+  }
+  const N=120,sA=Math.PI,tA=Math.PI,sAng=tA/N;
+  for(let i=0;i<N;i++){
+    const a0=sA+i*sAng,a1=a0+sAng+.005;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,a0,a1);ctx.closePath();
+    ctx.fillStyle=lerpClr(i/N);ctx.fill();
+  }
+  // Brilho na borda interna do arco
+  ctx.beginPath();ctx.arc(cx,cy,r0+1,Math.PI,2*Math.PI);
+  ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=2;ctx.stroke();
+  // Buraco interno
+  ctx.beginPath();ctx.arc(cx,cy,r0,0,Math.PI*2);ctx.fillStyle='#1a1d27';ctx.fill();
+  // Marcações de escala
+  for(let i=0;i<=10;i++){
+    const a=sA+(i/10)*tA,isMaj=i%5===0,r1=R+(isMaj?12:6),r2=R+1;
+    ctx.beginPath();ctx.moveTo(cx+r2*Math.cos(a),cy+r2*Math.sin(a));ctx.lineTo(cx+r1*Math.cos(a),cy+r1*Math.sin(a));
+    ctx.strokeStyle=isMaj?'rgba(255,255,255,0.55)':'rgba(255,255,255,0.2)';ctx.lineWidth=isMaj?2:1;ctx.stroke();
+    if(isMaj){ctx.fillStyle='#94a3b8';ctx.font='bold 10px Segoe UI';ctx.textAlign='center';ctx.textBaseline='middle';const rl=R+24;ctx.fillText(i*10+'%',cx+rl*Math.cos(a),cy+rl*Math.sin(a));}
+  }
+  // Agulha — comprimento R*0.88, aponta até o interior do arco colorido
+  const angRot=GLOBAL_ACC*Math.PI-Math.PI,nL=R*0.88;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(angRot);
+  const nGrad=ctx.createLinearGradient(-8,0,nL,0);
+  nGrad.addColorStop(0,'rgba(255,255,255,0.05)');
+  nGrad.addColorStop(0.55,'rgba(255,255,255,0.6)');
+  nGrad.addColorStop(1,'#ffffff');
+  ctx.beginPath();ctx.moveTo(-8,0);ctx.lineTo(nL,0);
+  ctx.lineWidth=3;ctx.strokeStyle=nGrad;ctx.lineCap='round';ctx.stroke();
+  ctx.restore();
+  // Pino central com gradiente
+  const pinGrad=ctx.createRadialGradient(cx-2,cy-2,1,cx,cy,10);
+  pinGrad.addColorStop(0,'#e2e8f0');pinGrad.addColorStop(1,'#475569');
+  ctx.beginPath();ctx.arc(cx,cy,10,0,Math.PI*2);ctx.fillStyle=pinGrad;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fillStyle='#0f1117';ctx.fill();
+  // Valor em div HTML abaixo do canvas (sem sobreposição com agulha)
+  document.getElementById('gaugeValue').textContent=(GLOBAL_ACC*100).toFixed(1).replace('.',',')+' %';
+  // Badge de zona
+  const z=document.getElementById('gaugeZone');
+  if(GLOBAL_ACC>=.95){z.textContent='EXCELENTE';z.className='zona-excelente';}
+  else if(GLOBAL_ACC>=.85){z.textContent='ÓTIMO';z.className='zona-otimo';}
+  else if(GLOBAL_ACC>=.70){z.textContent='BOM';z.className='zona-bom';}
+  else if(GLOBAL_ACC>=.50){z.textContent='ATENÇÃO';z.className='zona-atencao';}
+  else{z.textContent='RUIM';z.className='';}
+})();
+
+/* ── CHARTS ── */
+new Chart(document.getElementById('chartFamSaldo'),{type:'bar',data:{labels:FAMILIAS.map(f=>f.fam),datasets:[{label:'Saldo ERP',data:FAMILIAS.map(f=>f.saldoERP),backgroundColor:'rgba(79,142,247,0.75)',borderColor:'#4f8ef7',borderWidth:1,borderRadius:5},{label:'Saldo WMS',data:FAMILIAS.map(f=>f.saldoWMS),backgroundColor:'rgba(20,184,166,0.75)',borderColor:'#14b8a6',borderWidth:1,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a8299',font:{size:11}}},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtN(ctx.raw)}}},scales:{x:{ticks:{color:'#7a8299',font:{size:10}},grid:{color:'rgba(46,51,80,.4)'}},y:{ticks:{color:'#7a8299',font:{size:10},callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v},grid:{color:'rgba(46,51,80,.4)'}}}}});
+new Chart(document.getElementById('chartFamAcc'),{type:'bar',data:{labels:FAMILIAS.map(f=>f.fam),datasets:[{label:'% Acuracidade',data:FAMILIAS.map(f=>+(f.acc*100).toFixed(2)),backgroundColor:FAMILIAS.map(f=>accColor(f.acc)+'cc'),borderColor:FAMILIAS.map(f=>accColor(f.acc)),borderWidth:1,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1).replace('.',',')+' %'}}},scales:{x:{ticks:{color:'#7a8299',font:{size:10}},grid:{color:'rgba(46,51,80,.4)'}},y:{min:0,max:100,ticks:{color:'#7a8299',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(46,51,80,.4)'}}}}});
+const DEP_CHART_LABELS = DEPOSITOS.map(d=>DEP_NAMES[d.dep] ? `${d.dep}\n${DEP_NAMES[d.dep].substring(0,18)}` : d.dep);
+new Chart(document.getElementById('chartDepSaldo'),{type:'bar',data:{labels:DEPOSITOS.map(d=>d.dep),datasets:[{label:'Saldo ERP',data:DEPOSITOS.map(d=>d.saldoERP),backgroundColor:'rgba(79,142,247,0.75)',borderColor:'#4f8ef7',borderWidth:1,borderRadius:4},{label:'Saldo WMS',data:DEPOSITOS.map(d=>d.saldoWMS),backgroundColor:'rgba(20,184,166,0.75)',borderColor:'#14b8a6',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7a8299',font:{size:11}}},tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+fmtN(ctx.raw)}}},scales:{x:{ticks:{color:'#7a8299',font:{size:10}},grid:{color:'rgba(46,51,80,.4)'}},y:{ticks:{color:'#7a8299',font:{size:10},callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v},grid:{color:'rgba(46,51,80,.4)'}}}}});
+new Chart(document.getElementById('chartDepAcc'),{type:'bar',data:{labels:DEPOSITOS.map(d=>d.dep),datasets:[{label:'% Acuracidade',data:DEPOSITOS.map(d=>+(d.acc*100).toFixed(2)),backgroundColor:DEPOSITOS.map(d=>accColor(d.acc)+'cc'),borderColor:DEPOSITOS.map(d=>accColor(d.acc)),borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1).replace('.',',')+' %'}}},scales:{x:{ticks:{color:'#7a8299',font:{size:10}},grid:{color:'rgba(46,51,80,.4)'}},y:{min:0,max:100,ticks:{color:'#7a8299',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(46,51,80,.4)'}}}}});
+
+/* ── TABLE FAMÍLIAS ── */
+(function(){
+  const tbody=document.getElementById('tbodyFam');
+  let tW=0,tE=0;
+  FAMILIAS.forEach(f=>{
+    tW+=f.saldoWMS;tE+=f.saldoERP;
+    const dif=f.saldoERP-f.saldoWMS,dsku=f.skuERP-f.skuWMS;
+    tbody.innerHTML+=`<tr>
+      <td><span class="fam-tag ${f.tag}">${f.fam}</span></td>
+      <td>${fmtN(f.skuWMS)}</td><td>${fmtN(f.skuERP)}</td>
+      <td style="color:${dsku>0?'var(--red)':'var(--green)'}">${dsku>0?'+':''}${fmtN(dsku)}</td>
+      <td>${fmtN(f.saldoWMS)}</td><td>${fmtN(f.saldoERP)}</td>
+      <td style="color:${dif>0?'var(--red)':'var(--teal)'}">${dif>0?'+':''}${fmtN(dif)}</td>
+      <td>${accBarHTML(f.acc)}</td>
+    </tr>`;
+  });
+  const td=tE-tW,ta=Math.max(0,(tE-Math.abs(td))/tE);
+  document.getElementById('tfootFam').innerHTML=`<tr><td>TOTAL</td><td>751</td><td>1.135</td><td style="color:var(--red)">+384</td><td>${fmtN(tW)}</td><td>${fmtN(tE)}</td><td style="color:var(--red)">+${fmtN(td)}</td><td>${accBarHTML(ta)}</td></tr>`;
+})();
+
+/* ── TABLE DEPÓSITOS ── */
+(function(){
+  const tbody=document.getElementById('tbodyDep');
+  let tW=0,tE=0,tsW=0,tsE=0;
+  DEPOSITOS.forEach(d=>{
+    tW+=d.saldoWMS;tE+=d.saldoERP;tsW+=d.skuWMS;tsE+=d.skuERP;
+    const dif=d.saldoERP-d.saldoWMS,dsku=d.skuERP-d.skuWMS;
+    tbody.innerHTML+=`<tr>
+      <td style="font-size:12px;font-family:monospace;">DEP ${d.dep}<br><span style="font-family:'Segoe UI',sans-serif;font-size:10px;color:var(--muted);font-weight:400">${DEP_NAMES[d.dep]||''}</span></td>
+      <td>${fmtN(d.skuWMS)}</td><td>${fmtN(d.skuERP)}</td>
+      <td style="color:${dsku>0?'var(--orange)':dsku<0?'var(--teal)':'var(--muted)'}">${dsku>0?'+':''}${fmtN(dsku)}</td>
+      <td>${fmtN(d.saldoWMS)}</td><td>${fmtN(d.saldoERP)}</td>
+      <td style="color:${dif>0?'var(--red)':'var(--teal)'}">${dif>0?'+':''}${fmtN(dif)}</td>
+      <td>${accBarHTML(d.acc)}</td>
+      <td><span class="badge badge-${d.crit}">${d.crit}</span></td>
+    </tr>`;
+  });
+  const td=tE-tW,ta=Math.max(0,(tE-Math.abs(td))/tE);
+  document.getElementById('tfootDep').innerHTML=`<tr><td>TOTAL</td><td>${fmtN(tsW)}</td><td>${fmtN(tsE)}</td><td>—</td><td>${fmtN(tW)}</td><td>${fmtN(tE)}</td><td style="color:var(--red)">+${fmtN(td)}</td><td>${accBarHTML(ta)}</td><td>—</td></tr>`;
+})();
+
+/* ═══════════════════════════════════════
+   DRAWER — POR FAMÍLIA
+═══════════════════════════════════════ */
+function miniTableHTML(rows, showFam){
+  const famCol = showFam ? `<th style="text-align:left">Família</th>` : '';
+  let html=`<table class="mini-table"><thead><tr>
+    <th style="text-align:left">SKU</th>
+    <th style="text-align:left">Descrição</th>
+    ${famCol}
+    <th>DEP</th><th>ERP</th><th>WMS</th><th>Diferença</th><th>%</th><th>Crit.</th>
+  </tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const difClass=r.dif>0?'diff-pos':'diff-neg';
+    const famCell=showFam?`<td>${r.fam||''}</td>`:'';
+    const depFull = DEP_NAMES[r.dep] ? `${r.dep} · ${DEP_NAMES[r.dep]}` : r.dep;
+    html+=`<tr>
+      <td>${r.sku}</td>
+      <td title="${r.desc}">${r.desc.length>42?r.desc.substring(0,42)+'…':r.desc}</td>
+      ${famCell}
+      <td><span class="dep-tag" title="${DEP_NAMES[r.dep]||r.dep}">${r.dep}</span></td>
+      <td>${fmtN(r.erp)}</td>
+      <td>${fmtN(r.wms)}</td>
+      <td class="${difClass}">${r.dif>0?'+':''}${fmtN(r.dif)}</td>
+      <td class="${difClass}">${r.pct>0?'+':''}${r.pct.toFixed(1).replace('.',',')}%</td>
+      <td><span class="badge badge-${r.crit}" style="font-size:9px;padding:1px 7px">${r.crit}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  return html;
+}
+
+function buildFamSections(filter){
+  const FAM_CONFIG=[
+    {key:'EMBALAGEM',    label:'Embalagem',       tag:'fam-2',cnt:805,acc:'44,8%'},
+    {key:'PRODUTO_ACABADO',label:'Produto Acabado',tag:'fam-4',cnt:82, acc:'34,4%'},
+    {key:'MATERIA_PRIMA',label:'Matéria-Prima',   tag:'fam-1',cnt:22,  acc:'82,8%'},
+    {key:'MATERIAL_APOIO',label:'Material Apoio', tag:'fam-5',cnt:5,   acc:'49,1%'},
+  ];
+  const cont=document.getElementById('famSections');
+  cont.innerHTML='';
+  FAM_CONFIG.forEach(fc=>{
+    let rows=TOP_POR_FAMILIA[fc.key]||[];
+    if(filter){
+      const f=filter.toLowerCase();
+      rows=rows.filter(r=>r.sku.toLowerCase().includes(f)||r.desc.toLowerCase().includes(f));
+    }
+    const sec=document.createElement('div');
+    sec.className='fam-section';
+    sec.innerHTML=`
+      <div class="fam-section-header" onclick="toggleFamSection(this)">
+        <div class="fsh-left">
+          <span class="fam-tag ${fc.tag}">${fc.label}</span>
+        </div>
+        <div class="fsh-stats">
+          <div><span class="sph-val" style="color:var(--red);font-weight:700">${fc.cnt}</span> SKUs diver.</div>
+          <div>Acur. <span style="color:${accColor(parseFloat(fc.acc)/100)};font-weight:700">${fc.acc}</span></div>
+        </div>
+        <span class="fsh-arrow">▶</span>
+      </div>
+      <div class="fam-section-body">
+        <div style="padding:0">${rows.length?miniTableHTML(rows,false):'<div style="padding:16px;color:var(--muted);font-size:12px">Nenhum resultado encontrado.</div>'}</div>
+      </div>`;
+    cont.appendChild(sec);
+  });
+}
+
+function toggleFamSection(header){
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+function filterFam(val){buildFamSections(val);}
+buildFamSections('');
+
+/* ═══════════════════════════════════════
+   DRAWER — POR DEPÓSITO
+═══════════════════════════════════════ */
+function buildDepSections(){
+  const DEP_INFO={
+    '1-100':{acc:'2,6%',   crit:'CRITICA'},
+    '1010': {acc:'0,0%',   crit:'CRITICA'},
+    '1100': {acc:'96,4%',  crit:'CRITICA'},
+    '1101': {acc:'92,9%',  crit:'ALTA'},
+    '1102': {acc:'75,0%',  crit:'CRITICA'},
+    '1103': {acc:'98,98%', crit:'CRITICA'},
+    '1200': {acc:'89,2%',  crit:'CRITICA'},
+    '1203': {acc:'100%',   crit:'BAIXA'},
+    '3100': {acc:'94,6%',  crit:'CRITICA'},
+  };
+  const cont=document.getElementById('depSections');
+  cont.innerHTML='';
+  Object.entries(DEP_INFO).forEach(([dep,info])=>{
+    const rows=TOP_POR_DEP[dep]||[];
+    const accVal=parseFloat(info.acc)/100;
+    const depName = DEP_NAMES[dep] || '';
+    const sec=document.createElement('div');
+    sec.className='fam-section';
+    sec.innerHTML=`
+      <div class="fam-section-header" onclick="toggleFamSection(this)">
+        <div class="fsh-left" style="flex-direction:column;align-items:flex-start;gap:3px">
+          <span class="dep-tag">DEP ${dep}</span>
+          <span style="font-size:10px;color:var(--muted2);padding-left:2px">${depName}</span>
+        </div>
+        <div class="fsh-stats">
+          <div>Acur. <span style="color:${accColor(accVal)};font-weight:700">${info.acc}</span></div>
+          <div><span class="badge badge-${info.crit}" style="font-size:9px;padding:1px 7px">${info.crit}</span></div>
+        </div>
+        <span class="fsh-arrow">▶</span>
+      </div>
+      <div class="fam-section-body">
+        <div style="padding:0">${rows.length?miniTableHTML(rows,true):'<div style="padding:16px;color:var(--muted);font-size:12px">Dados não disponíveis.</div>'}</div>
+      </div>`;
+    cont.appendChild(sec);
+  });
+}
+buildDepSections();
+
+/* ═══════════════════════════════════════
+   DRAWER OPEN / CLOSE / TABS
+═══════════════════════════════════════ */
+function openDrawer(){
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeDrawer(){
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  document.body.style.overflow='';
+}
+function switchTab(panelId){
+  document.querySelectorAll('.dtab').forEach((t,i)=>{
+    const panels=['divFam','divDep','divSug'];
+    t.classList.toggle('active',panels[i]===panelId);
+  });
+  document.querySelectorAll('.dpanel').forEach(p=>p.classList.toggle('active',p.id===panelId));
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+</script>
+</body>
+</html>
