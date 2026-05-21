@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Análise Detalhada de SKUs · Acuracidade ERP x WMS · YBERA</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--surface3:#2c3148;
+  --border:#2e3350;--border2:#3a4060;
+  --text:#e2e8f0;--muted:#7a8299;--muted2:#9ba4bb;
+  --accent:#4f8ef7;--accent2:#7eb3ff;
+  --red:#f05252;--orange:#f97316;--yellow:#facc15;
+  --lime:#84cc16;--green:#22c55e;
+  --teal:#14b8a6;--purple:#a78bfa;--pink:#f472b6;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;min-height:100vh;}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:linear-gradient(135deg,#1a1d27,#0f1117);
+  border-bottom:1px solid var(--border);
+  padding:12px 28px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-left{display:flex;align-items:center;gap:16px;}
+.btn-back{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);text-decoration:none;
+  border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;
+  transition:background .15s,border-color .15s;
+}
+.btn-back:hover{background:var(--surface3);border-color:var(--accent);}
+.topbar-title h1{font-size:15px;font-weight:800;}
+.topbar-title .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.topbar-logos{display:flex;align-items:center;gap:12px;}
+.logo-s{display:flex;align-items:center;background:rgba(26,156,130,.08);border:1px solid rgba(26,156,130,.2);border-radius:8px;padding:6px 12px;}
+.logo-y{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 12px;}
+
+/* ── KPI BAR ── */
+.kpi-bar{
+  display:flex;gap:0;overflow-x:auto;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0;
+}
+.kpi-bar::-webkit-scrollbar{height:3px;}
+.kpi-bar::-webkit-scrollbar-thumb{background:var(--border2);}
+.kpi-item{
+  flex:1;min-width:130px;padding:14px 20px;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:3px;
+  cursor:pointer;transition:background .15s;
+}
+.kpi-item:hover{background:var(--surface2);}
+.kpi-item:last-child{border-right:none;}
+.kpi-item.active{background:var(--surface2);border-bottom:2px solid var(--accent);}
+.ki-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.ki-value{font-size:22px;font-weight:800;line-height:1;}
+.ki-sub{font-size:10px;color:var(--muted);}
+
+/* ── MAIN ── */
+main{padding:20px 28px;display:flex;flex-direction:column;gap:16px;}
+
+/* ── FILTERS ── */
+.filter-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;
+}
+.filter-bar label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);white-space:nowrap;}
+.filter-input{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;
+  outline:none;min-width:220px;flex:1;transition:border-color .2s;
+}
+.filter-input:focus{border-color:var(--accent);}
+.filter-input::placeholder{color:var(--muted);}
+.filter-select{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;
+  outline:none;cursor:pointer;transition:border-color .2s;
+}
+.filter-select:focus{border-color:var(--accent);}
+.filter-sep{width:1px;height:28px;background:var(--border);flex-shrink:0;}
+.btn-clear{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  border-radius:8px;padding:8px 14px;font-size:11px;cursor:pointer;
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.btn-clear:hover{background:var(--surface2);color:var(--text);}
+.btn-export{
+  background:linear-gradient(135deg,rgba(79,142,247,.2),rgba(124,58,237,.2));
+  border:1px solid rgba(79,142,247,.4);color:var(--accent2);
+  border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer;
+  transition:background .15s,border-color .15s;white-space:nowrap;
+}
+.btn-export:hover{background:linear-gradient(135deg,rgba(79,142,247,.35),rgba(124,58,237,.3));border-color:var(--accent);}
+.result-count{font-size:11px;color:var(--muted);white-space:nowrap;margin-left:auto;}
+/* acc bar */
+.acc-bar-w{display:flex;align-items:center;gap:5px;min-width:90px;}
+.acc-bar-t{height:5px;border-radius:3px;background:#2c3148;width:46px;overflow:hidden;flex-shrink:0;}
+.acc-bar-f{height:100%;border-radius:3px;}
+
+/* ── TABLE CONTAINER ── */
+.table-container{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+}
+.table-scroll{overflow-x:auto;}
+.table-scroll::-webkit-scrollbar{height:6px;}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ── DATA TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px;}
+.data-table thead th{
+  background:var(--surface2);color:var(--muted);
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;
+  padding:10px 14px;text-align:right;border-bottom:1px solid var(--border);
+  white-space:nowrap;cursor:pointer;user-select:none;
+  transition:color .15s;position:sticky;top:0;
+}
+.data-table thead th:hover{color:var(--text);}
+.data-table thead th.sort-asc::after{content:' ▲';font-size:9px;}
+.data-table thead th.sort-desc::after{content:' ▼';font-size:9px;}
+.data-table thead th:first-child,.data-table thead th:nth-child(2),.data-table thead th:nth-child(3){text-align:left;}
+.data-table tbody tr{border-bottom:1px solid rgba(46,51,80,.45);transition:background .12s;}
+.data-table tbody tr:hover{background:var(--surface2);}
+.data-table tbody tr:last-child{border-bottom:none;}
+.data-table tbody td{padding:9px 14px;text-align:right;vertical-align:middle;}
+.data-table tbody td:first-child{text-align:left;font-family:monospace;font-size:12px;font-weight:700;color:var(--accent2);}
+.data-table tbody td:nth-child(2){text-align:left;max-width:220px;}
+.data-table tbody td:nth-child(3){text-align:left;}
+
+/* desc tooltip */
+.desc-cell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;display:block;}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+.badge-CRITICA{background:rgba(240,82,82,.18);color:var(--red);border:1px solid rgba(240,82,82,.3);}
+.badge-ALTA{background:rgba(249,115,22,.18);color:var(--orange);border:1px solid rgba(249,115,22,.3);}
+.badge-MEDIA{background:rgba(250,204,21,.18);color:var(--yellow);border:1px solid rgba(250,204,21,.3);}
+.badge-BAIXA{background:rgba(34,197,94,.18);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+
+.fam-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;}
+.fam-EMBALAGEM{background:rgba(167,139,250,.18);color:#b9a8fa;}
+.fam-PRODUTO_ACABADO{background:rgba(244,114,182,.18);color:#f7a8d4;}
+.fam-MATERIA_PRIMA{background:rgba(79,142,247,.18);color:#7eb3ff;}
+.fam-GRANEL{background:rgba(20,184,166,.18);color:#5fd7cb;}
+.fam-MATERIAL_APOIO{background:rgba(250,204,21,.18);color:var(--yellow);}
+.fam-OUTROS{background:rgba(122,130,153,.18);color:var(--muted);}
+
+.dep-tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;font-family:monospace;background:rgba(20,184,166,.1);color:var(--teal);border:1px solid rgba(20,184,166,.2);white-space:nowrap;}
+
+/* diff colors */
+.dif-pos{color:var(--red);font-weight:700;}
+.dif-neg{color:var(--teal);font-weight:700;}
+.dif-zero{color:var(--muted);}
+
+/* ── PAGINATION ── */
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-top:1px solid var(--border);
+  background:var(--surface2);
+}
+.pag-info{font-size:11px;color:var(--muted);}
+.pag-btns{display:flex;gap:6px;}
+.pag-btn{
+  background:var(--surface3);border:1px solid var(--border);
+  color:var(--text);border-radius:7px;padding:6px 12px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.pag-btn:hover:not(:disabled){background:var(--surface);border-color:var(--accent);}
+.pag-btn:disabled{opacity:.35;cursor:default;}
+.pag-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ── EMPTY STATE ── */
+.empty-state{
+  padding:60px 20px;text-align:center;color:var(--muted);
+}
+.empty-state .es-icon{font-size:40px;margin-bottom:12px;}
+.empty-state .es-title{font-size:15px;font-weight:700;color:var(--muted2);margin-bottom:6px;}
+
+/* ── SECTION CARDS (family summary) ── */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:4px;}
+.sum-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s;
+}
+.sum-card:hover,.sum-card.active{border-color:var(--accent);background:var(--surface3);}
+.sum-card-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px;}
+.sum-card-val{font-size:20px;font-weight:800;}
+.sum-card-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* acc bar inline */
+.acc-mini{display:flex;align-items:center;gap:6px;}
+.acc-mini-bar{height:5px;border-radius:3px;background:var(--surface3);width:50px;overflow:hidden;flex-shrink:0;}
+.acc-mini-fill{height:100%;border-radius:3px;}
+
+/* ── FOOTER ── */
+footer{font-size:10px;color:var(--muted);text-align:center;padding:16px 0 10px;border-top:1px solid var(--border);margin:0 28px;}
+
+@media(max-width:768px){
+  main{padding:14px;}
+  .topbar{padding:10px 14px;}
+  .filter-bar{flex-direction:column;align-items:stretch;}
+  .filter-input{min-width:100%;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ TOPBAR ══════ -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a class="btn-back" href="dashboard_acuracidade.html">← Dashboard</a>
+    <div class="topbar-title">
+      <h1>Análise Detalhada de SKUs Divergentes</h1>
+      <div class="sub">ERP × WMS · Top 300 maiores divergências · Referência 20/05/2026</div>
+    </div>
+  </div>
+  <div class="topbar-logos">
+    <div class="logo-s">
+      <svg width="80" height="26" viewBox="0 0 96 30" fill="none">
+        <path d="M6 23C6 23 8 19 10 17C12 15 12 13 10 11C8 9 8 7 10 5" stroke="#1a9c82" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <path d="M10 23C10 23 12 19 14 17C16 15 16 13 14 11C12 9 12 7 14 5" stroke="#1a9c82" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <text x="22" y="21" font-family="'Segoe UI',sans-serif" font-size="16" font-weight="600" fill="#1a9c82">Senior</text>
+      </svg>
+    </div>
+    <div class="logo-y">
+      <svg width="104" height="26" viewBox="0 0 122 30" fill="none">
+        <text x="2" y="21" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="800" fill="#d1d5db">YBERA</text>
+        <text x="60" y="21" font-family="'Segoe UI',Arial,sans-serif" font-size="13" font-weight="400" fill="#9ca3af" letter-spacing="1">GROUP</text>
+        <text x="107" y="13" font-family="serif" font-size="8" fill="#9ca3af">®</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ KPI BAR ══════ -->
+<div class="kpi-bar" id="kpiBar">
+  <div class="kpi-item active" onclick="setFamFilter('')" id="kpiAll">
+    <div class="ki-label">SKUs Divergentes</div>
+    <div class="ki-value" style="color:var(--red)" id="kTot">—</div>
+    <div class="ki-sub" id="kTotSub">SKUs únicos</div>
+  </div>
+  <div class="kpi-item" onclick="setFamFilter('EMBALAGEM')" id="kpiEMB">
+    <div class="ki-label">Embalagem</div>
+    <div class="ki-value" style="color:#b9a8fa" id="kEmb">—</div>
+    <div class="ki-sub">SKU·dep divergentes</div>
+  </div>
+  <div class="kpi-item" onclick="setFamFilter('PRODUTO_ACABADO')" id="kpiPA">
+    <div class="ki-label">Produto Acabado</div>
+    <div class="ki-value" style="color:#f7a8d4" id="kPA">—</div>
+    <div class="ki-sub">SKU·dep divergentes</div>
+  </div>
+  <div class="kpi-item" onclick="setFamFilter('MATERIA_PRIMA')" id="kpiMP">
+    <div class="ki-label">Matéria-Prima</div>
+    <div class="ki-value" style="color:#7eb3ff" id="kMP">—</div>
+    <div class="ki-sub">SKU·dep divergentes</div>
+  </div>
+  <div class="kpi-item" onclick="setCritFilter('CRITICA')" id="kpiCRIT">
+    <div class="ki-label">Criticidade CRÍTICA</div>
+    <div class="ki-value" style="color:var(--red)" id="kCrit">—</div>
+    <div class="ki-sub">registros</div>
+  </div>
+  <div class="kpi-item" onclick="setCritFilter('ALTA')" id="kpiALTA">
+    <div class="ki-label">Criticidade ALTA</div>
+    <div class="ki-value" style="color:var(--orange)" id="kAlta">—</div>
+    <div class="ki-sub">registros</div>
+  </div>
+</div>
+
+<!-- ══════ MAIN ══════ -->
+<main>
+
+  <!-- FILTERS -->
+  <div class="filter-bar">
+    <label>🔍 Busca</label>
+    <input class="filter-input" id="search" placeholder="SKU, descrição..." oninput="applyFilters()"/>
+    <input class="filter-input" id="searchLote" placeholder="Lote indústria..." oninput="applyFilters()" style="margin-left:6px"/>
+
+    <div class="filter-sep"></div>
+    <label>Família</label>
+    <select class="filter-select" id="filtFam" onchange="applyFilters()">
+      <option value="">Todas</option>
+      <option value="EMBALAGEM">Embalagem</option>
+      <option value="PRODUTO_ACABADO">Produto Acabado</option>
+      <option value="MATERIA_PRIMA">Matéria-Prima</option>
+      <option value="GRANEL">Granel</option>
+      <option value="MATERIAL_APOIO">Material Apoio</option>
+    </select>
+
+    <div class="filter-sep"></div>
+    <label>Depósito</label>
+    <select class="filter-select" id="filtDep" onchange="applyFilters()">
+      <option value="">Todos</option>
+      <option value="1-100">1-100 · DEP. VIANA G3</option>
+      <option value="1010">1010 · RETENÇÃO</option>
+      <option value="1100">1100 · DEP. VIANA G9</option>
+      <option value="1101">1101 · AVARIA/BLOQ.</option>
+      <option value="1102">1102 · VENCIDOS</option>
+      <option value="1103">1103 · PERDAS/INV.</option>
+      <option value="1200">1200 · DEP. GUARAPARI</option>
+      <option value="1203">1203 · PERDAS/INV. GUARAPARI</option>
+      <option value="3100">3100 · FISCAL DEP. VIANA</option>
+    </select>
+
+    <div class="filter-sep"></div>
+    <label>Criticidade</label>
+    <select class="filter-select" id="filtCrit" onchange="applyFilters()">
+      <option value="">Todas</option>
+      <option value="CRITICA">Crítica</option>
+      <option value="ALTA">Alta</option>
+      <option value="MEDIA">Média</option>
+      <option value="BAIXA">Baixa</option>
+    </select>
+
+    <div class="filter-sep"></div>
+    <label>Tipo</label>
+    <select class="filter-select" id="filtTipo" onchange="applyFilters()">
+      <option value="">Todos</option>
+      <option value="pos">ERP &gt; WMS</option>
+      <option value="neg">WMS &gt; ERP</option>
+    </select>
+
+    <button class="btn-clear" onclick="clearFilters()">✕ Limpar</button>
+    <button class="btn-export" onclick="exportCSV()" title="Exportar dados filtrados para CSV">⬇ Exportar CSV</button>
+    <div class="result-count" id="resultCount"></div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-container">
+    <div class="table-scroll">
+      <table class="data-table" id="mainTable">
+        <thead>
+          <tr>
+            <th onclick="sortBy('sku')">SKU</th>
+            <th onclick="sortBy('desc')">Descrição</th>
+            <th onclick="sortBy('fam')">Família</th>
+            <th onclick="sortBy('dep')">Depósito</th>
+            <th onclick="sortBy('erp')">Saldo ERP</th>
+            <th onclick="sortBy('wms')">Saldo WMS</th>
+            <th onclick="sortBy('dif')">Diferença</th>
+            <th onclick="sortBy('pct')">% Dif.</th>
+            <th style="text-align:left">Lote Ind.</th>
+            <th onclick="sortBy('acc')">Acuracidade</th>
+            <th onclick="sortBy('crit')">Criticidade</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</main>
+
+<footer>Análise Detalhada de SKUs · auditoria_erp_wms_PlanilhaERP_PlanilhaWMS_FINAL_v2.xlsx · Referência 20/05/2026 · GYP / YBERA</footer>
+
+<script>
+/* ══════════════════════════
+   MAPA DE DEPÓSITOS
+══════════════════════════ */
+const DEP_NAMES={
+  '1-100':'DEP. VIANA G3','1010':'RETENÇÃO','1100':'DEP. VIANA G9',
+  '1101':'AVARIA/BLOQUEADO G9','1102':'VENCIDOS G9','1103':'PERDAS/INVENTÁRIO G9',
+  '1200':'DEP. GUARAPARI','1203':'PERDAS/INV. GUARAPARI','3100':'FISCAL DEP. VIANA'
+};
+const FAM_LABELS={
+  'EMBALAGEM':'Embalagem','PRODUTO_ACABADO':'Produto Acabado',
+  'MATERIA_PRIMA':'Matéria-Prima','GRANEL':'Granel',
+  'MATERIAL_APOIO':'Material Apoio','OUTROS':'Outros'
+};
+
+/* ══════════════════════════
+   DADOS — 1 linha por SKU · Lote · Depósito (saldo_NOVO.xlsx)
+══════════════════════════ */
+const RAW_DATA=[
+{"sku":"2000070011","desc":"SELO INDUCAO DE SEGURANCA PP143 - 23,2MM","fam":"EMBALAGEM","dep":"3100","lote":"CP07083A","erp":260,"wms":788467,"dif":-788207,"pct":0.0,"crit":"CRITICA"},
+{"sku":"2000070011","desc":"SELO INDUCAO DE SEGURANCA PP143 - 23,2MM","fam":"EMBALAGEM","dep":"3100","lote":"CP07193B","erp":1280,"wms":788467,"dif":-787187,"pct":0.2,"crit":"CRITICA"},
+{"sku":"2000070011","desc":"SELO INDUCAO DE SEGURANCA PP143 - 23,2MM","fam":"EMBALAGEM","dep":"3100","lote":"CP07526D","erp":49909,"wms":788467,"dif":-738558,"pct":6.3,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"1100","lote":"CP06809","erp":466,"wms":570347,"dif":-569881,"pct":0.1,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP06809","erp":466,"wms":570347,"dif":-569881,"pct":0.1,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"1100","lote":"CP07526D","erp":710,"wms":570347,"dif":-569637,"pct":0.1,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07526D","erp":710,"wms":570347,"dif":-569637,"pct":0.1,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"1100","lote":"CP07193B","erp":19689,"wms":570347,"dif":-550658,"pct":3.5,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07193B","erp":19689,"wms":570347,"dif":-550658,"pct":3.5,"crit":"CRITICA"},
+{"sku":"2000070011","desc":"SELO INDUCAO DE SEGURANCA PP143 - 23,2MM","fam":"EMBALAGEM","dep":"3100","lote":"CP07751A","erp":299970,"wms":788467,"dif":-488497,"pct":38.0,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"1100","lote":"CP07637","erp":247377,"wms":570347,"dif":-322970,"pct":43.4,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07637","erp":247377,"wms":570347,"dif":-322970,"pct":43.4,"crit":"CRITICA"},
+{"sku":"2000070011","desc":"SELO INDUCAO DE SEGURANCA PP143 - 23,2MM","fam":"EMBALAGEM","dep":"3100","lote":"CP07671A","erp":470432,"wms":788467,"dif":-318035,"pct":59.7,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"1100","lote":"CP07745C","erp":299970,"wms":570347,"dif":-270377,"pct":52.6,"crit":"CRITICA"},
+{"sku":"2000070002","desc":"SELO INDUCAO DE SEGURANCA 27,0MM - PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07745C","erp":299970,"wms":570347,"dif":-270377,"pct":52.6,"crit":"CRITICA"},
+{"sku":"2000070012","desc":"SELO INDUCAO DE SEGURANCA 61,5MM PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07063A","erp":410,"wms":201252,"dif":-200842,"pct":0.2,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"3100","lote":"166408","erp":1000,"wms":185163,"dif":-184163,"pct":0.5,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"1100","lote":"166408","erp":1000,"wms":184464,"dif":-183464,"pct":0.5,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"1100","lote":"166451","erp":2000,"wms":184464,"dif":-182464,"pct":1.1,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"3100","lote":"1624","erp":5690,"wms":185163,"dif":-179473,"pct":3.1,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"1100","lote":"1624","erp":5690,"wms":184464,"dif":-178774,"pct":3.1,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"179739/1","erp":1531,"wms":172475,"dif":-170944,"pct":0.9,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"197745/1","erp":1845,"wms":172475,"dif":-170630,"pct":1.1,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"1100","lote":"179739/1","erp":1531,"wms":171893,"dif":-170362,"pct":0.9,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"194060/1","erp":2303,"wms":172475,"dif":-170172,"pct":1.3,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"1100","lote":"197745/1","erp":1845,"wms":171893,"dif":-170048,"pct":1.1,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"1100","lote":"194060/1","erp":2303,"wms":171893,"dif":-169590,"pct":1.3,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"1100","lote":"202131/1","erp":14127,"wms":171893,"dif":-157766,"pct":8.2,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"1100","lote":"601356-1-1","erp":3639,"wms":159970,"dif":-156331,"pct":2.3,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"1100","lote":"25102691","erp":5867,"wms":159970,"dif":-154103,"pct":3.7,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"3100","lote":"601356-1-1","erp":3639,"wms":156168,"dif":-152529,"pct":2.3,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"3100","lote":"25102691","erp":5867,"wms":156168,"dif":-150301,"pct":3.8,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"206699/1","erp":24998,"wms":172475,"dif":-147477,"pct":14.5,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"206710/1","erp":24998,"wms":172475,"dif":-147477,"pct":14.5,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"1100","lote":"206699/1","erp":24998,"wms":171893,"dif":-146895,"pct":14.5,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"1100","lote":"206710/1","erp":24998,"wms":171893,"dif":-146895,"pct":14.5,"crit":"ALTA"},
+{"sku":"2000010148","desc":"TAMPA FLIP TOP BRANCA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"202131/1","erp":25621,"wms":172475,"dif":-146854,"pct":14.9,"crit":"ALTA"},
+{"sku":"2000060218","desc":"SLEEVE LACRE 210 X 205 FRASCO 250ML TAMPA DISKTOP","fam":"EMBALAGEM","dep":"3100","lote":"2412RS069","erp":852,"wms":136453,"dif":-135601,"pct":0.6,"crit":"ALTA"},
+{"sku":"2000070006","desc":"SELO INDUCAO DE SEGURANCA 93,0MM PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07526D","erp":17328,"wms":151648,"dif":-134320,"pct":11.4,"crit":"ALTA"},
+{"sku":"2000070006","desc":"SELO INDUCAO DE SEGURANCA 93,0MM PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07751","erp":19982,"wms":151648,"dif":-131666,"pct":13.2,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"1100","lote":"26032892","erp":30397,"wms":159970,"dif":-129573,"pct":19.0,"crit":"ALTA"},
+{"sku":"2000060218","desc":"SLEEVE LACRE 210 X 205 FRASCO 250ML TAMPA DISKTOP","fam":"EMBALAGEM","dep":"3100","lote":"2502RS334","erp":7683,"wms":136453,"dif":-128770,"pct":5.6,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"3100","lote":"26032892","erp":30397,"wms":156168,"dif":-125771,"pct":19.5,"crit":"ALTA"},
+{"sku":"2000060230","desc":"SLEEVE LACRE GARGALO MIRRA 90 ML 5,2X7CM","fam":"EMBALAGEM","dep":"3100","lote":"2502RS259","erp":17650,"wms":143248,"dif":-125598,"pct":12.3,"crit":"ALTA"},
+{"sku":"2000060230","desc":"SLEEVE LACRE GARGALO MIRRA 90 ML 5,2X7CM","fam":"EMBALAGEM","dep":"3100","lote":"2504RS859","erp":20000,"wms":143248,"dif":-123248,"pct":14.0,"crit":"ALTA"},
+{"sku":"2000070009","desc":"SELO INDUCAO DE SEGURANCA 21,1MM PP143","fam":"EMBALAGEM","dep":"3100","lote":"CP07396","erp":101,"wms":110608,"dif":-110507,"pct":0.1,"crit":"CRITICA"},
+{"sku":"2000060230","desc":"SLEEVE LACRE GARGALO MIRRA 90 ML 5,2X7CM","fam":"EMBALAGEM","dep":"3100","lote":"2504RS456","erp":35120,"wms":143248,"dif":-108128,"pct":24.5,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"3100","lote":"2042","erp":80472,"wms":185163,"dif":-104691,"pct":43.5,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"1100","lote":"2042","erp":80472,"wms":184464,"dif":-103992,"pct":43.6,"crit":"ALTA"},
+{"sku":"2000060230","desc":"SLEEVE LACRE GARGALO MIRRA 90 ML 5,2X7CM","fam":"EMBALAGEM","dep":"3100","lote":"2508RS058","erp":39980,"wms":143248,"dif":-103268,"pct":27.9,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"1100","lote":"26031521","erp":61198,"wms":159970,"dif":-98772,"pct":38.3,"crit":"ALTA"},
+{"sku":"2000010027","desc":"ESPATULA BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"18/03/2025","erp":39998,"wms":136753,"dif":-96755,"pct":29.2,"crit":"ALTA"},
+{"sku":"2000070006","desc":"SELO INDUCAO DE SEGURANCA 93,0MM PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07535C","erp":54971,"wms":151648,"dif":-96677,"pct":36.2,"crit":"ALTA"},
+{"sku":"2000060229","desc":"SLEEVE LACRE GARGALO MIRRA 60 ML 4,7x6,6","fam":"EMBALAGEM","dep":"1-100","lote":"2507RS428","erp":96480,"wms":0,"dif":96480,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000060230","desc":"SLEEVE LACRE GARGALO MIRRA 90 ML 5,2X7CM","fam":"EMBALAGEM","dep":"3100","lote":"2503RS256","erp":46837,"wms":143248,"dif":-96411,"pct":32.7,"crit":"ALTA"},
+{"sku":"2000010027","desc":"ESPATULA BRANCA","fam":"EMBALAGEM","dep":"1100","lote":"18/03/2025","erp":39998,"wms":135918,"dif":-95920,"pct":29.4,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"3100","lote":"26031521","erp":61198,"wms":156168,"dif":-94970,"pct":39.2,"crit":"ALTA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"1100","lote":"13353","erp":373,"wms":90278,"dif":-89905,"pct":0.4,"crit":"ALTA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"1100","lote":"P13388","erp":483,"wms":90278,"dif":-89795,"pct":0.5,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"1100","lote":"26013482","erp":70864,"wms":159970,"dif":-89106,"pct":44.3,"crit":"ALTA"},
+{"sku":"2000070006","desc":"SELO INDUCAO DE SEGURANCA 93,0MM PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07671A","erp":64980,"wms":151648,"dif":-86668,"pct":42.8,"crit":"ALTA"},
+{"sku":"2000010098","desc":"VALVULA SPRAY LILAS PANT 3575C 24410","fam":"EMBALAGEM","dep":"3100","lote":"26013482","erp":71162,"wms":156168,"dif":-85006,"pct":45.6,"crit":"ALTA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"3100","lote":"13353","erp":373,"wms":83695,"dif":-83322,"pct":0.4,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"3100","lote":"2233","erp":101997,"wms":185163,"dif":-83166,"pct":55.1,"crit":"ALTA"},
+{"sku":"2000010149","desc":"TAMPA LACRE BRANCA PERFIL BAIXO ROSCA 28","fam":"EMBALAGEM","dep":"1100","lote":"2233","erp":101997,"wms":184464,"dif":-82467,"pct":55.3,"crit":"ALTA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"3100","lote":"P13388","erp":2190,"wms":83695,"dif":-81505,"pct":2.6,"crit":"ALTA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"21814","erp":750,"wms":74086,"dif":-73336,"pct":1.0,"crit":"CRITICA"},
+{"sku":"2000010203","desc":"TAMPA OCTAGONAL POTE TORRE 164C MIRRA","fam":"EMBALAGEM","dep":"3100","lote":"1807","erp":21598,"wms":92690,"dif":-71092,"pct":23.3,"crit":"CRITICA"},
+{"sku":"2000010217","desc":"TAMPA FLIP TOP AZUL 28/410","fam":"EMBALAGEM","dep":"3100","lote":"25/0713209-3/37","erp":22,"wms":66083,"dif":-66061,"pct":0.0,"crit":"ALTA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"3100","lote":"P13915","erp":19994,"wms":83695,"dif":-63701,"pct":23.9,"crit":"ALTA"},
+{"sku":"2000040256","desc":"BISNAGA FASHION KIDS CREME PARA PENTEAR SUPER LIGA 200G","fam":"EMBALAGEM","dep":"1100","lote":"3268268","erp":9623,"wms":71081,"dif":-61458,"pct":13.5,"crit":"CRITICA"},
+{"sku":"2000040256","desc":"BISNAGA FASHION KIDS CREME PARA PENTEAR SUPER LIGA 200G","fam":"EMBALAGEM","dep":"3100","lote":"3268268","erp":9623,"wms":71081,"dif":-61458,"pct":13.5,"crit":"CRITICA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"1100","lote":"P13384","erp":29067,"wms":90278,"dif":-61211,"pct":32.2,"crit":"ALTA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"1100","lote":"13371","erp":1800,"wms":62686,"dif":-60886,"pct":2.9,"crit":"ALTA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"1100","lote":"1805","erp":2000,"wms":62686,"dif":-60686,"pct":3.2,"crit":"ALTA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"1100","lote":"13391","erp":2097,"wms":62686,"dif":-60589,"pct":3.3,"crit":"ALTA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"1100","lote":"6854-25","erp":4500,"wms":62686,"dif":-58186,"pct":7.2,"crit":"ALTA"},
+{"sku":"2000070009","desc":"SELO INDUCAO DE SEGURANCA 21,1MM PP143","fam":"EMBALAGEM","dep":"1100","lote":"CP07751A","erp":54712,"wms":110608,"dif":-55896,"pct":49.5,"crit":"CRITICA"},
+{"sku":"2000070009","desc":"SELO INDUCAO DE SEGURANCA 21,1MM PP143","fam":"EMBALAGEM","dep":"3100","lote":"CP07751A","erp":54712,"wms":110608,"dif":-55896,"pct":49.5,"crit":"CRITICA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"1100","lote":"22235","erp":19291,"wms":74770,"dif":-55479,"pct":25.8,"crit":"ALTA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"1100","lote":"1800","erp":34995,"wms":90278,"dif":-55283,"pct":38.8,"crit":"ALTA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"21815","erp":18944,"wms":74086,"dif":-55142,"pct":25.6,"crit":"CRITICA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"22235","erp":19291,"wms":74086,"dif":-54795,"pct":26.0,"crit":"CRITICA"},
+{"sku":"2000070009","desc":"SELO INDUCAO DE SEGURANCA 21,1MM PP143","fam":"EMBALAGEM","dep":"1100","lote":"CP07637","erp":55896,"wms":110608,"dif":-54712,"pct":50.5,"crit":"CRITICA"},
+{"sku":"2000070009","desc":"SELO INDUCAO DE SEGURANCA 21,1MM PP143","fam":"EMBALAGEM","dep":"3100","lote":"CP07637","erp":55896,"wms":110608,"dif":-54712,"pct":50.5,"crit":"CRITICA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"3100","lote":"P13384","erp":29067,"wms":83695,"dif":-54628,"pct":34.7,"crit":"ALTA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"1100","lote":"22232","erp":24998,"wms":74770,"dif":-49772,"pct":33.4,"crit":"ALTA"},
+{"sku":"2000010188","desc":"TAMPA DISK TOP 28410 LILAS PANT 3575C 100TIMETROS","fam":"EMBALAGEM","dep":"1100","lote":"P13916","erp":960,"wms":50193,"dif":-49233,"pct":1.9,"crit":"CRITICA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"22232","erp":24998,"wms":74086,"dif":-49088,"pct":33.7,"crit":"CRITICA"},
+{"sku":"2000010192","desc":"TAMPA DISK TOP ROSA 28410 PANT 5025-C","fam":"EMBALAGEM","dep":"3100","lote":"1800","erp":34995,"wms":83695,"dif":-48700,"pct":41.8,"crit":"ALTA"},
+{"sku":"2000060226","desc":"SLEEVE LACRE 210 X 230 FRASCO 250ML V.BICO DE PATO","fam":"EMBALAGEM","dep":"3100","lote":"2407RS659","erp":432,"wms":47027,"dif":-46595,"pct":0.9,"crit":"ALTA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"1100","lote":"22236","erp":29039,"wms":74770,"dif":-45731,"pct":38.8,"crit":"ALTA"},
+{"sku":"2000010160","desc":"TAMPA DISK TOP 24/410 - BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"22236","erp":29047,"wms":74086,"dif":-45039,"pct":39.2,"crit":"CRITICA"},
+{"sku":"2000060226","desc":"SLEEVE LACRE 210 X 230 FRASCO 250ML V.BICO DE PATO","fam":"EMBALAGEM","dep":"3100","lote":"2410RSP059","erp":2350,"wms":47027,"dif":-44677,"pct":5.0,"crit":"ALTA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"1100","lote":"P10006","erp":20698,"wms":62686,"dif":-41988,"pct":33.0,"crit":"ALTA"},
+{"sku":"2000060226","desc":"SLEEVE LACRE 210 X 230 FRASCO 250ML V.BICO DE PATO","fam":"EMBALAGEM","dep":"3100","lote":"2501RS048","erp":5397,"wms":47027,"dif":-41630,"pct":11.5,"crit":"ALTA"},
+{"sku":"2000040256","desc":"BISNAGA FASHION KIDS CREME PARA PENTEAR SUPER LIGA 200G","fam":"EMBALAGEM","dep":"1100","lote":"3353518","erp":30018,"wms":71081,"dif":-41063,"pct":42.2,"crit":"CRITICA"},
+{"sku":"2000040256","desc":"BISNAGA FASHION KIDS CREME PARA PENTEAR SUPER LIGA 200G","fam":"EMBALAGEM","dep":"3100","lote":"3353518","erp":30018,"wms":71081,"dif":-41063,"pct":42.2,"crit":"CRITICA"},
+{"sku":"2000010188","desc":"TAMPA DISK TOP 28410 LILAS PANT 3575C 100TIMETROS","fam":"EMBALAGEM","dep":"3100","lote":"P13916","erp":9627,"wms":50193,"dif":-40566,"pct":19.2,"crit":"ALTA"},
+{"sku":"2000010209","desc":"TAMPA OCTAGONAL POTE TORRE COOL GRAY5C VELLO","fam":"EMBALAGEM","dep":"3100","lote":"1306","erp":1445,"wms":41295,"dif":-39850,"pct":3.5,"crit":"CRITICA"},
+{"sku":"2000010197","desc":"TAMPA OCTAG POTE TORRE CREME DE AMPOLA DETOX","fam":"EMBALAGEM","dep":"3100","lote":"1447","erp":74,"wms":39543,"dif":-39469,"pct":0.2,"crit":"ALTA"},
+{"sku":"2000010197","desc":"TAMPA OCTAG POTE TORRE CREME DE AMPOLA DETOX","fam":"EMBALAGEM","dep":"3100","lote":"1612","erp":357,"wms":39543,"dif":-39186,"pct":0.9,"crit":"ALTA"},
+{"sku":"2000080025","desc":"ANEL PANTONE LARANJA 172C 24410  MIRRA","fam":"EMBALAGEM","dep":"1100","lote":"7864","erp":50555,"wms":11573,"dif":38982,"pct":436.8,"crit":"CRITICA"},
+{"sku":"2000010197","desc":"TAMPA OCTAG POTE TORRE CREME DE AMPOLA DETOX","fam":"EMBALAGEM","dep":"3100","lote":"432","erp":883,"wms":39543,"dif":-38660,"pct":2.2,"crit":"ALTA"},
+{"sku":"2000070014","desc":"SELO INDUCAO DE SEGURANCA PP-143GYP 93MM","fam":"EMBALAGEM","dep":"1-100","lote":"CPO7089","erp":38111,"wms":0,"dif":38111,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000010152","desc":"TAMPA FLIP TOP ROXA 28/410","fam":"EMBALAGEM","dep":"3100","lote":"6582","erp":1000,"wms":38948,"dif":-37948,"pct":2.6,"crit":"ALTA"},
+{"sku":"2000010209","desc":"TAMPA OCTAGONAL POTE TORRE COOL GRAY5C VELLO","fam":"EMBALAGEM","dep":"1100","lote":"1306","erp":1445,"wms":39388,"dif":-37943,"pct":3.7,"crit":"ALTA"},
+{"sku":"2000060226","desc":"SLEEVE LACRE 210 X 230 FRASCO 250ML V.BICO DE PATO","fam":"EMBALAGEM","dep":"3100","lote":"2501RS159","erp":9995,"wms":47027,"dif":-37032,"pct":21.3,"crit":"ALTA"},
+{"sku":"2000010197","desc":"TAMPA OCTAG POTE TORRE CREME DE AMPOLA DETOX","fam":"EMBALAGEM","dep":"3100","lote":"1545","erp":4677,"wms":39543,"dif":-34866,"pct":11.8,"crit":"ALTA"},
+{"sku":"2000080025","desc":"ANEL PANTONE LARANJA 172C 24410  MIRRA","fam":"EMBALAGEM","dep":"3100","lote":"7864","erp":45972,"wms":11573,"dif":34399,"pct":397.2,"crit":"CRITICA"},
+{"sku":"2000010027","desc":"ESPATULA BRANCA","fam":"EMBALAGEM","dep":"1100","lote":"17/12/2024","erp":102773,"wms":135918,"dif":-33145,"pct":75.6,"crit":"ALTA"},
+{"sku":"2750020047","desc":"FRASCO FASHION GOLD BRANCO 150G SELANTE POTENCIALIZADO","fam":"EMBALAGEM","dep":"3100","lote":"OS5844","erp":33231,"wms":765,"dif":32466,"pct":4343.9,"crit":"CRITICA"},
+{"sku":"2000010027","desc":"ESPATULA BRANCA","fam":"EMBALAGEM","dep":"3100","lote":"17/12/2024","erp":104773,"wms":136753,"dif":-31980,"pct":76.6,"crit":"ALTA"},
+{"sku":"2000010242","desc":"TAMPA FLIP TOP CRONOGRAMA LOIRO EQUILIBRIO MARROM PEROL","fam":"EMBALAGEM","dep":"1100","lote":"1578670","erp":15355,"wms":46248,"dif":-30893,"pct":33.2,"crit":"CRITICA"},
+{"sku":"2000010242","desc":"TAMPA FLIP TOP CRONOGRAMA LOIRO EQUILIBRIO MARROM PEROL","fam":"EMBALAGEM","dep":"3100","lote":"1578670","erp":15355,"wms":46248,"dif":-30893,"pct":33.2,"crit":"CRITICA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"3100","lote":"13371","erp":1800,"wms":29095,"dif":-27295,"pct":6.2,"crit":"CRITICA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"3100","lote":"13391","erp":2097,"wms":29095,"dif":-26998,"pct":7.2,"crit":"CRITICA"},
+{"sku":"4100010003","desc":"FASHION GOLD - 100TIMETROS - TONICO 150ML","fam":"PRODUTO_ACABADO","dep":"3100","lote":"05260417815","erp":6125,"wms":32585,"dif":-26460,"pct":18.8,"crit":"CRITICA"},
+{"sku":"2000010197","desc":"TAMPA OCTAG POTE TORRE CREME DE AMPOLA DETOX","fam":"EMBALAGEM","dep":"3100","lote":"1596","erp":13400,"wms":39543,"dif":-26143,"pct":33.9,"crit":"ALTA"},
+{"sku":"4100010003","desc":"FASHION GOLD - 100TIMETROS - TONICO 150ML","fam":"PRODUTO_ACABADO","dep":"3100","lote":"07260417815","erp":6452,"wms":32585,"dif":-26133,"pct":19.8,"crit":"CRITICA"},
+{"sku":"4100010003","desc":"FASHION GOLD - 100TIMETROS - TONICO 150ML","fam":"PRODUTO_ACABADO","dep":"3100","lote":"06260417815","erp":6550,"wms":32585,"dif":-26035,"pct":20.1,"crit":"CRITICA"},
+{"sku":"4100010003","desc":"FASHION GOLD - 100TIMETROS - TONICO 150ML","fam":"PRODUTO_ACABADO","dep":"3100","lote":"04260417815","erp":6630,"wms":32585,"dif":-25955,"pct":20.3,"crit":"CRITICA"},
+{"sku":"4100010003","desc":"FASHION GOLD - 100TIMETROS - TONICO 150ML","fam":"PRODUTO_ACABADO","dep":"3100","lote":"02260417815","erp":6828,"wms":32585,"dif":-25757,"pct":21.0,"crit":"CRITICA"},
+{"sku":"2000010109","desc":"TAMPA RETA 24410 BRANCA C DISCO POLEXAN","fam":"EMBALAGEM","dep":"1100","lote":"21903","erp":39429,"wms":14911,"dif":24518,"pct":264.4,"crit":"CRITICA"},
+{"sku":"2000060229","desc":"SLEEVE LACRE GARGALO MIRRA 60 ML 4,7x6,6","fam":"EMBALAGEM","dep":"1-100","lote":"2504RS858","erp":19990.2,"wms":0,"dif":19990.2,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000010109","desc":"TAMPA RETA 24410 BRANCA C DISCO POLEXAN","fam":"EMBALAGEM","dep":"3100","lote":"20032020","erp":1619,"wms":21576,"dif":-19957,"pct":7.5,"crit":"CRITICA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"1303","erp":998,"wms":19394,"dif":-18396,"pct":5.1,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"1100","lote":"1219","erp":206,"wms":18251,"dif":-18045,"pct":1.1,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"3100","lote":"1219","erp":206,"wms":18251,"dif":-18045,"pct":1.1,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"1100","lote":"1811","erp":35998,"wms":18251,"dif":17747,"pct":197.2,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"3100","lote":"1811","erp":35998,"wms":18251,"dif":17747,"pct":197.2,"crit":"CRITICA"},
+{"sku":"2000010209","desc":"TAMPA OCTAGONAL POTE TORRE COOL GRAY5C VELLO","fam":"EMBALAGEM","dep":"3100","lote":"1806","erp":24298,"wms":41295,"dif":-16997,"pct":58.8,"crit":"CRITICA"},
+{"sku":"2000010153","desc":"TAMPA FLIP TOP MARROM 28/410","fam":"EMBALAGEM","dep":"3100","lote":"7248","erp":13332,"wms":30043,"dif":-16711,"pct":44.4,"crit":"ALTA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"1804","erp":35998,"wms":19394,"dif":16604,"pct":185.6,"crit":"CRITICA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"1303","erp":998,"wms":17523,"dif":-16525,"pct":5.7,"crit":"ALTA"},
+{"sku":"2000060218","desc":"SLEEVE LACRE 210 X 205 FRASCO 250ML TAMPA DISKTOP","fam":"EMBALAGEM","dep":"3100","lote":"2604RS558","erp":119990,"wms":136453,"dif":-16463,"pct":87.9,"crit":"ALTA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"13372","erp":3098,"wms":19394,"dif":-16296,"pct":16.0,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P13388","erp":754,"wms":16565,"dif":-15811,"pct":4.6,"crit":"CRITICA"},
+{"sku":"2750020394","desc":"FRASCO TORRE INCOLOR PET 90ML MIRRA OIL REP UNICA","fam":"EMBALAGEM","dep":"3100","lote":"OS5711","erp":411,"wms":16211,"dif":-15800,"pct":2.5,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"56588","erp":48,"wms":15685,"dif":-15637,"pct":0.3,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"1328","erp":1008,"wms":16565,"dif":-15557,"pct":6.1,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"WR2500","erp":154,"wms":15685,"dif":-15531,"pct":1.0,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P13922","erp":1188,"wms":16565,"dif":-15377,"pct":7.2,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P10223","erp":1220,"wms":16565,"dif":-15345,"pct":7.4,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"WR2500","erp":1434,"wms":16565,"dif":-15131,"pct":8.7,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P13388","erp":754,"wms":15685,"dif":-14931,"pct":4.8,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"1328","erp":1008,"wms":15685,"dif":-14677,"pct":6.4,"crit":"CRITICA"},
+{"sku":"2750020394","desc":"FRASCO TORRE INCOLOR PET 90ML MIRRA OIL REP UNICA","fam":"EMBALAGEM","dep":"1100","lote":"OS5711","erp":1562,"wms":16211,"dif":-14649,"pct":9.6,"crit":"CRITICA"},
+{"sku":"2000060226","desc":"SLEEVE LACRE 210 X 230 FRASCO 250ML V.BICO DE PATO","fam":"EMBALAGEM","dep":"3100","lote":"2604RS258","erp":32428,"wms":47027,"dif":-14599,"pct":69.0,"crit":"ALTA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P10243","erp":1980,"wms":16565,"dif":-14585,"pct":12.0,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P13922","erp":1188,"wms":15685,"dif":-14497,"pct":7.6,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P10223","erp":1220,"wms":15685,"dif":-14465,"pct":7.8,"crit":"CRITICA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"13372","erp":3098,"wms":17523,"dif":-14425,"pct":17.7,"crit":"ALTA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P10243","erp":1980,"wms":15685,"dif":-13705,"pct":12.6,"crit":"CRITICA"},
+{"sku":"2000010109","desc":"TAMPA RETA 24410 BRANCA C DISCO POLEXAN","fam":"EMBALAGEM","dep":"1100","lote":"21904","erp":28243,"wms":14911,"dif":13332,"pct":189.4,"crit":"CRITICA"},
+{"sku":"2000010109","desc":"TAMPA RETA 24410 BRANCA C DISCO POLEXAN","fam":"EMBALAGEM","dep":"1100","lote":"20032020","erp":1619,"wms":14911,"dif":-13292,"pct":10.9,"crit":"CRITICA"},
+{"sku":"4100120003","desc":"YBERA FASHION GOLD - CUIDADOS PROFUNDOS  - MASCARA DE HI","fam":"PRODUTO_ACABADO","dep":"1100","lote":"1260430241","erp":11998,"wms":0,"dif":11998,"pct":100.0,"crit":"CRITICA"},
+{"sku":"4100120003","desc":"YBERA FASHION GOLD - CUIDADOS PROFUNDOS  - MASCARA DE HI","fam":"PRODUTO_ACABADO","dep":"3100","lote":"1260430241","erp":11998,"wms":0,"dif":11998,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000010109","desc":"TAMPA RETA 24410 BRANCA C DISCO POLEXAN","fam":"EMBALAGEM","dep":"3100","lote":"21903","erp":32761,"wms":21576,"dif":11185,"pct":151.8,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"1100","lote":"13373","erp":7248,"wms":18251,"dif":-11003,"pct":39.7,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"3100","lote":"13373","erp":7248,"wms":18251,"dif":-11003,"pct":39.7,"crit":"CRITICA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"3100","lote":"1805","erp":38698,"wms":29095,"dif":9603,"pct":133.0,"crit":"CRITICA"},
+{"sku":"2000010243","desc":"TAMPA FLIP TOP CRONOGRAMA CUIDADOS PROFUNDOS MEDULA ROS","fam":"EMBALAGEM","dep":"3100","lote":"1570840","erp":5430,"wms":14980,"dif":-9550,"pct":36.2,"crit":"CRITICA"},
+{"sku":"2000010207","desc":"TAMPA OCTAGONAL POTE TORRE 2333C DETOX","fam":"EMBALAGEM","dep":"3100","lote":"P10006","erp":20698,"wms":29095,"dif":-8397,"pct":71.1,"crit":"CRITICA"},
+{"sku":"4100050004","desc":"FASHION GOLD - ESCOVA PROGRESSIVA - SELANTE POTENICIALIZ","fam":"PRODUTO_ACABADO","dep":"1100","lote":"06260424157","erp":4426,"wms":12011,"dif":-7585,"pct":36.8,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"1100","lote":"P13894","erp":10797,"wms":18251,"dif":-7454,"pct":59.2,"crit":"CRITICA"},
+{"sku":"2000010201","desc":"TAMPA OCTAG POTE TORRE 2143C DISCOVERY","fam":"EMBALAGEM","dep":"3100","lote":"P13894","erp":10797,"wms":18251,"dif":-7454,"pct":59.2,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P10123","erp":9715,"wms":16565,"dif":-6850,"pct":58.6,"crit":"CRITICA"},
+{"sku":"2000040251","desc":"BISNAGA CUIDADOS PROFUNDOS - CUTICULA 250GR AZUL PANTON","fam":"EMBALAGEM","dep":"3100","lote":"3427041","erp":99,"wms":6661,"dif":-6562,"pct":1.5,"crit":"CRITICA"},
+{"sku":"2000070012","desc":"SELO INDUCAO DE SEGURANCA 61,5MM PEAD","fam":"EMBALAGEM","dep":"3100","lote":"CP07745C","erp":194984,"wms":201252,"dif":-6268,"pct":96.9,"crit":"ALTA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P10123","erp":9715,"wms":15685,"dif":-5970,"pct":61.9,"crit":"CRITICA"},
+{"sku":"2000010209","desc":"TAMPA OCTAGONAL POTE TORRE COOL GRAY5C VELLO","fam":"EMBALAGEM","dep":"1100","lote":"13345","erp":45245,"wms":39388,"dif":5857,"pct":114.9,"crit":"ALTA"},
+{"sku":"2750020394","desc":"FRASCO TORRE INCOLOR PET 90ML MIRRA OIL REP UNICA","fam":"EMBALAGEM","dep":"1100","lote":"OS5800","erp":21953,"wms":16211,"dif":5742,"pct":135.4,"crit":"CRITICA"},
+{"sku":"4100050004","desc":"FASHION GOLD - ESCOVA PROGRESSIVA - SELANTE POTENICIALIZ","fam":"PRODUTO_ACABADO","dep":"1100","lote":"05260424157","erp":6385,"wms":12011,"dif":-5626,"pct":53.2,"crit":"CRITICA"},
+{"sku":"2000010243","desc":"TAMPA FLIP TOP CRONOGRAMA CUIDADOS PROFUNDOS MEDULA ROS","fam":"EMBALAGEM","dep":"3100","lote":"1637986","erp":9602,"wms":14980,"dif":-5378,"pct":64.1,"crit":"CRITICA"},
+{"sku":"2000010188","desc":"TAMPA DISK TOP 28410 LILAS PANT 3575C 100TIMETROS","fam":"EMBALAGEM","dep":"1100","lote":"P10019","erp":54997,"wms":50193,"dif":4804,"pct":109.6,"crit":"CRITICA"},
+{"sku":"2000010188","desc":"TAMPA DISK TOP 28410 LILAS PANT 3575C 100TIMETROS","fam":"EMBALAGEM","dep":"3100","lote":"P10019","erp":54997,"wms":50193,"dif":4804,"pct":109.6,"crit":"ALTA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P10007","erp":15298,"wms":19394,"dif":-4096,"pct":78.9,"crit":"CRITICA"},
+{"sku":"4100120003","desc":"YBERA FASHION GOLD - CUIDADOS PROFUNDOS  - MASCARA DE HI","fam":"PRODUTO_ACABADO","dep":"1100","lote":"1260425239","erp":4020,"wms":0,"dif":4020,"pct":100.0,"crit":"CRITICA"},
+{"sku":"4100120003","desc":"YBERA FASHION GOLD - CUIDADOS PROFUNDOS  - MASCARA DE HI","fam":"PRODUTO_ACABADO","dep":"3100","lote":"1260425239","erp":4020,"wms":0,"dif":4020,"pct":100.0,"crit":"CRITICA"},
+{"sku":"1000010024","desc":"ALB 380 / TECH15 / FORT VEG-13","fam":"MATERIA_PRIMA","dep":"1200","lote":"F260209145","erp":2198.86,"wms":6141.68,"dif":-3942.82,"pct":35.8,"crit":"CRITICA"},
+{"sku":"2000010109","desc":"TAMPA RETA 24410 BRANCA C DISCO POLEXAN","fam":"EMBALAGEM","dep":"3100","lote":"21904","erp":24908,"wms":21576,"dif":3332,"pct":115.4,"crit":"CRITICA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"03260507814","erp":3295,"wms":114,"dif":3181,"pct":2890.4,"crit":"CRITICA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"04260508814","erp":3244,"wms":114,"dif":3130,"pct":2845.6,"crit":"CRITICA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"01260507814","erp":3240,"wms":114,"dif":3126,"pct":2842.1,"crit":"CRITICA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"02260507814","erp":3237,"wms":114,"dif":3123,"pct":2839.5,"crit":"CRITICA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"01260123814","erp":3225,"wms":114,"dif":3111,"pct":2828.9,"crit":"CRITICA"},
+{"sku":"1000010024","desc":"ALB 380 / TECH15 / FORT VEG-13","fam":"MATERIA_PRIMA","dep":"1200","lote":"F260424440","erp":3141.68,"wms":6141.68,"dif":-3000,"pct":51.2,"crit":"CRITICA"},
+{"sku":"2000080025","desc":"ANEL PANTONE LARANJA 172C 24410  MIRRA","fam":"EMBALAGEM","dep":"1100","lote":"7857","erp":9032,"wms":11573,"dif":-2541,"pct":78.0,"crit":"CRITICA"},
+{"sku":"2000080025","desc":"ANEL PANTONE LARANJA 172C 24410  MIRRA","fam":"EMBALAGEM","dep":"3100","lote":"7857","erp":9032,"wms":11573,"dif":-2541,"pct":78.0,"crit":"CRITICA"},
+{"sku":"4100120003","desc":"YBERA FASHION GOLD - CUIDADOS PROFUNDOS  - MASCARA DE HI","fam":"PRODUTO_ACABADO","dep":"1100","lote":"1260428241","erp":2275,"wms":0,"dif":2275,"pct":100.0,"crit":"CRITICA"},
+{"sku":"4100120003","desc":"YBERA FASHION GOLD - CUIDADOS PROFUNDOS  - MASCARA DE HI","fam":"PRODUTO_ACABADO","dep":"3100","lote":"1260428241","erp":2275,"wms":0,"dif":2275,"pct":100.0,"crit":"CRITICA"},
+{"sku":"1000010154","desc":"CLORETO DE CETIL TRIMETIL AMONIO 50%","fam":"MATERIA_PRIMA","dep":"1200","lote":"M260128075","erp":166.76,"wms":2422.17,"dif":-2255.41,"pct":6.9,"crit":"ALTA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P10244","erp":17913,"wms":15685,"dif":2228,"pct":114.2,"crit":"CRITICA"},
+{"sku":"2000010206","desc":"TAMPA OCTAGONAL POTE TORRE 2111C BOTULINICA","fam":"EMBALAGEM","dep":"1100","lote":"P10007","erp":15298,"wms":17523,"dif":-2225,"pct":87.3,"crit":"ALTA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"01260508814","erp":2240,"wms":114,"dif":2126,"pct":1964.9,"crit":"CRITICA"},
+{"sku":"1000010154","desc":"CLORETO DE CETIL TRIMETIL AMONIO 50%","fam":"MATERIA_PRIMA","dep":"1200","lote":"01524901002","erp":940.25,"wms":2422.17,"dif":-1481.92,"pct":38.8,"crit":"ALTA"},
+{"sku":"2000010209","desc":"TAMPA OCTAGONAL POTE TORRE COOL GRAY5C VELLO","fam":"EMBALAGEM","dep":"3100","lote":"13345","erp":39850,"wms":41295,"dif":-1445,"pct":96.5,"crit":"CRITICA"},
+{"sku":"2750020047","desc":"FRASCO FASHION GOLD BRANCO 150G SELANTE POTENCIALIZADO","fam":"EMBALAGEM","dep":"3100","lote":"OS5691","erp":2146,"wms":765,"dif":1381,"pct":280.5,"crit":"CRITICA"},
+{"sku":"2000080015","desc":"ANEL PANTONE 2111C 28410 BOTULINICA","fam":"EMBALAGEM","dep":"3100","lote":"P10244","erp":17913,"wms":16565,"dif":1348,"pct":108.1,"crit":"CRITICA"},
+{"sku":"2750020394","desc":"FRASCO TORRE INCOLOR PET 90ML MIRRA OIL REP UNICA","fam":"EMBALAGEM","dep":"3100","lote":"OS5800","erp":17370,"wms":16211,"dif":1159,"pct":107.1,"crit":"CRITICA"},
+{"sku":"2750020394","desc":"FRASCO TORRE INCOLOR PET 90ML MIRRA OIL REP UNICA","fam":"EMBALAGEM","dep":"1100","lote":"OS5918","erp":15060,"wms":16211,"dif":-1151,"pct":92.9,"crit":"CRITICA"},
+{"sku":"2750020394","desc":"FRASCO TORRE INCOLOR PET 90ML MIRRA OIL REP UNICA","fam":"EMBALAGEM","dep":"3100","lote":"OS5918","erp":15060,"wms":16211,"dif":-1151,"pct":92.9,"crit":"CRITICA"},
+{"sku":"1000010154","desc":"CLORETO DE CETIL TRIMETIL AMONIO 50%","fam":"MATERIA_PRIMA","dep":"1200","lote":"M260130088","erp":1764.73,"wms":2422.17,"dif":-657.44,"pct":72.9,"crit":"ALTA"},
+{"sku":"2750020047","desc":"FRASCO FASHION GOLD BRANCO 150G SELANTE POTENCIALIZADO","fam":"EMBALAGEM","dep":"3100","lote":"OS5753","erp":175,"wms":765,"dif":-590,"pct":22.9,"crit":"CRITICA"},
+{"sku":"1000010725","desc":"SILICONE SF 1214 (DC1411)","fam":"MATERIA_PRIMA","dep":"1200","lote":"H171PBQ020","erp":20.16,"wms":517.54,"dif":-497.38,"pct":3.9,"crit":"CRITICA"},
+{"sku":"2000010188","desc":"TAMPA DISK TOP 28410 LILAS PANT 3575C 100TIMETROS","fam":"EMBALAGEM","dep":"1100","lote":"1803","erp":49995,"wms":50193,"dif":-198,"pct":99.6,"crit":"CRITICA"},
+{"sku":"2000010188","desc":"TAMPA DISK TOP 28410 LILAS PANT 3575C 100TIMETROS","fam":"EMBALAGEM","dep":"3100","lote":"1803","erp":49995,"wms":50193,"dif":-198,"pct":99.6,"crit":"ALTA"},
+{"sku":"1000010725","desc":"SILICONE SF 1214 (DC1411)","fam":"MATERIA_PRIMA","dep":"1200","lote":"H171Q2B19","erp":497.37,"wms":517.54,"dif":-20.17,"pct":96.1,"crit":"CRITICA"},
+{"sku":"2000040250","desc":"BISNAGA CUIDADOS PROFUNDOS - CORTEX 250GR LARANJA PANTO","fam":"EMBALAGEM","dep":"3100","lote":"3466932","erp":5873,"wms":5871,"dif":2,"pct":100.0,"crit":"CRITICA"},
+{"sku":"5000010011","desc":"PINCEL TAM.G PROFISSIONAL","fam":"MATERIAL_APOIO","dep":"1010","lote":"9653/2026","erp":1,"wms":0,"dif":1,"pct":100.0,"crit":"CRITICA"},
+{"sku":"5000010012","desc":"TIGELA P/ TINTURA C/ ABA GRADUADA 250ML","fam":"MATERIAL_APOIO","dep":"1010","lote":"9653/2026","erp":1,"wms":0,"dif":1,"pct":100.0,"crit":"CRITICA"},
+{"sku":"5000010013","desc":"TOUCA METALQUENTE","fam":"MATERIAL_APOIO","dep":"1010","lote":"1797","erp":1,"wms":0,"dif":1,"pct":100.0,"crit":"CRITICA"},
+{"sku":"5000010015","desc":"PENTE PROFISSIONAL 335","fam":"MATERIAL_APOIO","dep":"1010","lote":"9653/2026","erp":1,"wms":0,"dif":1,"pct":100.0,"crit":"CRITICA"},
+{"sku":"5000010019","desc":"CAPA DE CORTE NYLON FECHAMENTO EM BOTAO","fam":"MATERIAL_APOIO","dep":"1010","lote":"2084","erp":1,"wms":0,"dif":1,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000080025","desc":"ANEL PANTONE LARANJA 172C 24410  MIRRA","fam":"EMBALAGEM","dep":"1100","lote":"7915","erp":11573,"wms":11573,"dif":0,"pct":100.0,"crit":"CRITICA"},
+{"sku":"4100010001","desc":"FASHION GOLD - 100TIMETROS - CONDICIONADOR 150ML","fam":"PRODUTO_ACABADO","dep":"1100","lote":"01260121814","erp":114,"wms":114,"dif":0,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000010203","desc":"TAMPA OCTAGONAL POTE TORRE 164C MIRRA","fam":"EMBALAGEM","dep":"3100","lote":"1338","erp":92690,"wms":92690,"dif":0,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000040251","desc":"BISNAGA CUIDADOS PROFUNDOS - CUTICULA 250GR AZUL PANTON","fam":"EMBALAGEM","dep":"3100","lote":"3487053","erp":6661,"wms":6661,"dif":0,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2000080025","desc":"ANEL PANTONE LARANJA 172C 24410  MIRRA","fam":"EMBALAGEM","dep":"3100","lote":"7915","erp":11573,"wms":11573,"dif":0,"pct":100.0,"crit":"CRITICA"},
+{"sku":"2750020047","desc":"FRASCO FASHION GOLD BRANCO 150G SELANTE POTENCIALIZADO","fam":"EMBALAGEM","dep":"3100","lote":"OS5906","erp":765,"wms":765,"dif":0,"pct":100.0,"crit":"CRITICA"}
+];
+
+
+/* ══════════════════════════
+   STATE
+══════════════════════════ */
+let filtered = [...RAW_DATA];
+let sortCol  = 'dif';
+let sortDir  = -1; // -1 = desc
+let page     = 1;
+const PAGE_SIZE = 25;
+
+/* ══════════════════════════
+   FORMAT HELPERS
+══════════════════════════ */
+const fN = v => Number(v).toLocaleString('pt-BR',{maximumFractionDigits:0});
+const fP = v => (v>0?'+':'')+v.toFixed(1).replace('.',',')+'%';
+function accClr(v){return v>=.95?'#22c55e':v>=.85?'#84cc16':v>=.70?'#facc15':v>=.50?'#f97316':'#f05252';}
+function accBarHTML(pct){
+  const v=Math.max(0,Math.min(1,1-Math.abs(pct)/100));
+  const c=accClr(v);
+  return`<div class="acc-bar-w"><div class="acc-bar-t"><div class="acc-bar-f" style="width:${v*100}%;background:${c}"></div></div><span style="font-size:10px;font-weight:700;color:${c}">${(v*100).toFixed(0)}%</span></div>`;
+}
+
+/* ══════════════════════════
+   RENDER
+══════════════════════════ */
+function render(){
+  updateKPIs();
+  renderTable();
+  renderPagination();
+}
+
+function updateKPIs(){
+  const tot  = RAW_DATA.length;
+  const uniq = new Set(RAW_DATA.filter(r=>r.dif!==0).map(r=>r.sku)).size;
+  const emb  = RAW_DATA.filter(r=>r.fam==='EMBALAGEM').length;
+  const pa   = RAW_DATA.filter(r=>r.fam==='PRODUTO_ACABADO').length;
+  const mp   = RAW_DATA.filter(r=>r.fam==='MATERIA_PRIMA').length;
+  const crit = RAW_DATA.filter(r=>r.crit==='CRITICA').length;
+  const alta = RAW_DATA.filter(r=>r.crit==='ALTA').length;
+  document.getElementById('kTot').textContent  = uniq;
+  document.getElementById('kTotSub').textContent = `${filtered.length} registros filtrados`;
+  document.getElementById('kEmb').textContent  = emb;
+  document.getElementById('kPA').textContent   = pa;
+  document.getElementById('kMP').textContent   = mp;
+  document.getElementById('kCrit').textContent = crit;
+  document.getElementById('kAlta').textContent = alta;
+  document.getElementById('resultCount').textContent =
+    `${filtered.length} de ${tot} registros`;
+}
+
+function renderTable(){
+  const tbody = document.getElementById('tableBody');
+  const start = (page-1)*PAGE_SIZE;
+  const slice = filtered.slice(start, start+PAGE_SIZE);
+
+  if(!slice.length){
+    tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state"><div class="es-icon">🔍</div><div class="es-title">Nenhum resultado encontrado</div><div>Tente ajustar os filtros acima</div></div></td></tr>`;
+    return;
+  }
+
+  let rows='';
+  slice.forEach(r=>{
+    const difClass = r.dif>0?'dif-pos':r.dif<0?'dif-neg':'dif-zero';
+    const depName  = DEP_NAMES[r.dep]||'';
+    const famLabel = FAM_LABELS[r.fam]||r.fam;
+    const lote = r.lote
+      ? `<span style="font-size:10px;font-family:monospace;color:var(--muted2)">${r.lote}</span>`
+      : '<span style="color:var(--muted);font-size:10px">N/D</span>';
+    // Divergência real: |dif| / max(erp, wms)
+    const base = Math.max(r.erp, r.wms);
+    const divPct = base > 0 ? (r.dif / base) * 100 : 0;
+    const absDivPct = base > 0 ? Math.abs(r.dif) / base * 100 : 0;
+    const pctClass = divPct>0?'dif-pos':divPct<0?'dif-neg':'dif-zero';
+    rows+=`<tr>
+      <td>${r.sku}</td>
+      <td><span class="desc-cell" title="${r.desc}">${r.desc}</span></td>
+      <td><span class="fam-tag fam-${r.fam}">${famLabel}</span></td>
+      <td>
+        <span class="dep-tag" title="${depName}">${r.dep}</span>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap">${depName}</div>
+      </td>
+      <td>${fN(r.erp)}</td>
+      <td>${fN(r.wms)}</td>
+      <td class="${difClass}">${r.dif>0?'+':''}${fN(r.dif)}</td>
+      <td class="${pctClass}">${fP(divPct)}</td>
+      <td style="text-align:left">${lote}</td>
+      <td>${accBarHTML(absDivPct)}</td>
+      <td><span class="badge badge-${r.crit}">${r.crit}</span></td>
+    </tr>`;
+  });
+  tbody.innerHTML=rows;
+}
+
+function renderPagination(){
+  const total = filtered.length;
+  const pages = Math.ceil(total/PAGE_SIZE);
+  const start = (page-1)*PAGE_SIZE+1;
+  const end   = Math.min(page*PAGE_SIZE, total);
+  const pag   = document.getElementById('pagination');
+  if(!total){pag.innerHTML='';return;}
+
+  let btns='';
+  const lo=Math.max(1,page-2), hi=Math.min(pages,page+2);
+  if(lo>1) btns+=`<button class="pag-btn" onclick="goPage(1)">1</button>`;
+  if(lo>2) btns+=`<span style="color:var(--muted);padding:0 4px">…</span>`;
+  for(let i=lo;i<=hi;i++) btns+=`<button class="pag-btn${i===page?' active':''}" onclick="goPage(${i})">${i}</button>`;
+  if(hi<pages-1) btns+=`<span style="color:var(--muted);padding:0 4px">…</span>`;
+  if(hi<pages) btns+=`<button class="pag-btn" onclick="goPage(${pages})">${pages}</button>`;
+
+  pag.innerHTML=`
+    <span class="pag-info">Mostrando ${fN(start)}–${fN(end)} de ${fN(total)} registros</span>
+    <div class="pag-btns">
+      <button class="pag-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>‹ Anterior</button>
+      ${btns}
+      <button class="pag-btn" onclick="goPage(${page+1})" ${page===pages?'disabled':''}>Próxima ›</button>
+    </div>`;
+}
+
+function goPage(p){
+  page=p;
+  document.querySelector('main').scrollIntoView({behavior:'smooth'});
+  renderTable();renderPagination();
+}
+
+/* ══════════════════════════
+   SORT
+══════════════════════════ */
+function sortBy(col){
+  if(sortCol===col) sortDir*=-1; else {sortCol=col;sortDir=-1;}
+  filtered.sort((a,b)=>{
+    let va,vb;
+    if(col==='acc'){va=1-Math.abs(a.pct)/100;vb=1-Math.abs(b.pct)/100;}
+    else{va=a[col];vb=b[col];}
+    if(col==='dif'||col==='pct'){va=Math.abs(va);vb=Math.abs(vb);}
+    if(typeof va==='string') return sortDir*va.localeCompare(vb,'pt-BR');
+    return sortDir*(va-vb);
+  });
+  document.querySelectorAll('.data-table thead th').forEach(th=>{
+    th.classList.remove('sort-asc','sort-desc');
+  });
+  const thIdx={'sku':0,'desc':1,'fam':2,'dep':3,'erp':4,'wms':5,'dif':6,'pct':7,'acc':9,'crit':10};
+  const th=document.querySelectorAll('.data-table thead th')[thIdx[col]];
+  if(th) th.classList.add(sortDir===1?'sort-asc':'sort-desc');
+  page=1;renderTable();renderPagination();
+}
+
+/* ══════════════════════════
+   FILTERS
+══════════════════════════ */
+function applyFilters(){
+  const q     = document.getElementById('search').value.toLowerCase().trim();
+  const qLote = document.getElementById('searchLote').value.toLowerCase().trim();
+  const fam   = document.getElementById('filtFam').value;
+  const dep   = document.getElementById('filtDep').value;
+  const crit  = document.getElementById('filtCrit').value;
+  const tipo  = document.getElementById('filtTipo').value;
+
+  filtered = RAW_DATA.filter(r=>{
+    if(q && !r.sku.toLowerCase().includes(q) && !r.desc.toLowerCase().includes(q)) return false;
+    if(qLote && !(r.lote||'').toLowerCase().includes(qLote)) return false;
+    if(fam  && r.fam!==fam)   return false;
+    if(dep  && r.dep!==dep)   return false;
+    if(crit && r.crit!==crit) return false;
+    if(tipo==='pos' && r.dif<=0) return false;
+    if(tipo==='neg' && r.dif>=0) return false;
+    return true;
+  });
+
+  // re-sort
+  filtered.sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(sortCol==='dif'||sortCol==='pct'){va=Math.abs(va);vb=Math.abs(vb);}
+    if(typeof va==='string') return sortDir*va.localeCompare(vb,'pt-BR');
+    return sortDir*(va-vb);
+  });
+
+  // update kpi bar active state
+  document.querySelectorAll('.kpi-item').forEach(k=>k.classList.remove('active'));
+  if(!fam && !dep && !crit && !tipo && !q) document.getElementById('kpiAll').classList.add('active');
+
+  page=1;render();
+}
+
+function clearFilters(){
+  document.getElementById('search').value='';
+  document.getElementById('searchLote').value='';
+  document.getElementById('filtFam').value='';
+  document.getElementById('filtDep').value='';
+  document.getElementById('filtCrit').value='';
+  document.getElementById('filtTipo').value='';
+  filtered=[...RAW_DATA];
+  sortCol='dif';sortDir=-1;
+  filtered.sort((a,b)=>Math.abs(b.dif)-Math.abs(a.dif));
+  page=1;render();
+}
+
+function setFamFilter(fam){
+  document.getElementById('filtFam').value=fam;
+  applyFilters();
+}
+function setCritFilter(crit){
+  document.getElementById('filtCrit').value=crit;
+  applyFilters();
+}
+
+/* ══════════════════════════
+   EXPORT CSV
+══════════════════════════ */
+function exportCSV(){
+  const cols=['SKU','Descrição','Família','Depósito','Saldo ERP','Saldo WMS','Diferença','% Dif.','Lote Ind.','Acuracidade %','Criticidade'];
+  const rows=filtered.map(r=>{
+    const base=Math.max(r.erp,r.wms);
+    const absDivPct=base>0?Math.abs(r.dif)/base*100:0;
+    const acc=Math.max(0,Math.min(100,100-absDivPct)).toFixed(0);
+    const divPct=base>0?(r.dif/base)*100:0;
+    return[r.sku,`"${r.desc}"`,r.fam,r.dep,r.erp,r.wms,r.dif,divPct.toFixed(1)+'%',r.lote||'N/D',acc+'%',r.crit].join(';');
+  });
+  const csv='﻿'+cols.join(';')+'\n'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='divergencias_sku_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+/* ── INIT ── */
+filtered.sort((a,b)=>Math.abs(b.dif)-Math.abs(a.dif));
+render();
+// set initial sort indicator
+const th=document.querySelectorAll('.data-table thead th')[6];
+if(th) th.classList.add('sort-desc');
+</script>
+</body>
+</html>
