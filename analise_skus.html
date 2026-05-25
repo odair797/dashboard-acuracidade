@@ -87,6 +87,7 @@ tr:hover td{background:#22263a66}
   </div>
   <div class="filters">
     <input id="search" placeholder="🔎 buscar SKU ou descrição">
+    <input id="search_lote" placeholder="🏷️ buscar Lote Indústria">
     <select id="fam"><option value="">— Todas as famílias —</option></select>
     <select id="dep"><option value="">— Todos os depósitos —</option></select>
     <select id="crit"><option value="">— Todas as criticidades —</option></select>
@@ -137,10 +138,12 @@ depSet.forEach(d=>document.getElementById('dep').innerHTML+=`<option value="${d}
 })();
 function filtered(){
   const q=document.getElementById('search').value.trim().toLowerCase();
+  const ql=document.getElementById('search_lote').value.trim().toLowerCase();
   const f=document.getElementById('fam').value;const d=document.getElementById('dep').value;
   const c=document.getElementById('crit').value;const t=document.getElementById('tipo').value;
   return RAW_DATA.filter(r=>{
     if(q&&!((r.sku||'').toLowerCase().includes(q)||(r.descricao||'').toLowerCase().includes(q)))return false;
+    if(ql&&!(r.lote||'').toLowerCase().includes(ql))return false;
     if(f&&r.familia!==f)return false;if(d&&r.deposito!==d)return false;
     if(c){if(c==='ALTA_CRITICA'&&!(r.criticidade==='ALTA'||r.criticidade==='CRITICA'))return false;if(c!=='ALTA_CRITICA'&&r.criticidade!==c)return false;}
     if(t==='erp_maior'&&r.diferenca<=0)return false;if(t==='wms_maior'&&r.diferenca>=0)return false;
@@ -162,7 +165,7 @@ function render(){
   document.getElementById('paginfo').textContent=`Mostrando ${page*PAGE+1}–${Math.min((page+1)*PAGE,total)} de ${fmtInt(total)} registros`;
   document.getElementById('prev').disabled=(page===0);document.getElementById('next').disabled=(page>=pages-1);
 }
-['search','fam','dep','crit','tipo'].forEach(id=>{
+['search','search_lote','fam','dep','crit','tipo'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>{page=0;render();});
   document.getElementById(id).addEventListener('change',()=>{
     page=0;const v=document.getElementById('crit').value;
@@ -172,7 +175,7 @@ function render(){
     render();
   });
 });
-document.getElementById('clear').onclick=()=>{['search','fam','dep','crit','tipo'].forEach(id=>document.getElementById(id).value='');document.querySelectorAll('.crit-panel,.total-card').forEach(el=>el.classList.remove('active'));document.getElementById('total_card').classList.add('active');page=0;render();};
+document.getElementById('clear').onclick=()=>{['search','search_lote','fam','dep','crit','tipo'].forEach(id=>document.getElementById(id).value='');document.querySelectorAll('.crit-panel,.total-card').forEach(el=>el.classList.remove('active'));document.getElementById('total_card').classList.add('active');page=0;render();};
 document.getElementById('prev').onclick=()=>{page--;render();};document.getElementById('next').onclick=()=>{page++;render();};
 document.querySelectorAll('th[data-s]').forEach(th=>{th.addEventListener('click',()=>{const k=th.dataset.s;if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=-1;}render();});});
 document.getElementById('total_card').onclick=()=>{document.querySelectorAll('.crit-panel,.total-card').forEach(el=>el.classList.remove('active'));document.getElementById('total_card').classList.add('active');document.getElementById('crit').value='';page=0;render();};
