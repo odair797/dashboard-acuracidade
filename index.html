@@ -233,7 +233,7 @@ const critCls=c=>'c-'+c.toLowerCase();
       </td>
     </tr>`;
     // Cabeçalho de colunas (filho oculto)
-    html+=`<tr class="dep-child" data-grp="${gid}">${HDR.replace(/^<tr[^>]*>/,'').replace(/<\/tr>$','')}</tr>`.replace(/<tr[^>]*>/,'<tr class="dep-child" data-grp="'+gid+'" style="border:none">');
+    html+=`<tr class="dep-child" data-grp="${gid}">${HDR.replace(/^<tr[^>]*>/,'').replace(/<\/tr>$/,'')}</tr>`.replace(/<tr[^>]*>/,'<tr class="dep-child" data-grp="'+gid+'" style="border:none">');
     // Linhas de depósitos filhos
     g.deps.forEach(d=>{
       const col=accColor(d.acc_q);const wPct=Math.min(100,Math.max(0,d.acc_q*100));
