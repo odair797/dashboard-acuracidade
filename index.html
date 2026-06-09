@@ -67,6 +67,17 @@ tr:hover td{background:#E2DCCB66}
 .stock-btn .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .stock-btn.active .dot{background:#fff}
 .alert-nota{background:#facc1511;border:1px solid #facc1544;border-radius:8px;padding:10px 14px;font-size:12px;color:#facc15}
+/* Depósitos expansíveis */
+.group-hdr-row{cursor:pointer;user-select:none}
+.group-hdr-row:hover td{filter:brightness(.96)}
+.toggle-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--accent);color:#fff;font-size:16px;font-weight:900;margin-right:10px;transition:transform .22s ease;flex-shrink:0;line-height:1}
+.toggle-icon.open{transform:rotate(45deg)}
+.dep-child{display:none}
+@keyframes depIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.dep-child.visible{display:table-row;animation:depIn .18s ease}
+/* Skeleton loading */
+.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:14px;display:inline-block}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
@@ -166,8 +177,8 @@ const critCls=c=>'c-'+c.toLowerCase();
   ctx.beginPath();ctx.arc(cx,cy,ri,Math.PI,2*Math.PI,false);ctx.strokeStyle='#E2DCCB';ctx.lineWidth=1;ctx.stroke();
   ctx.fillStyle='#7a829988';ctx.font='10px Segoe UI';ctx.textAlign='center';
   [0,20,40,60,80,100].forEach(v=>{const a=Math.PI+(v/100)*Math.PI;ctx.fillText(v+'%',cx+(R+14)*Math.cos(a),cy+(R+14)*Math.sin(a));});
-  const ang=Math.PI+p*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(R-8)*Math.cos(ang),cy+(R-8)*Math.sin(ang));ctx.strokeStyle='#fff';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,7,0,2*Math.PI);ctx.fillStyle='#fff';ctx.fill();
+  const ang=Math.PI+p*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(R-8)*Math.cos(ang),cy+(R-8)*Math.sin(ang));ctx.strokeStyle='#000000';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,8,0,2*Math.PI);ctx.fillStyle='#000000';ctx.fill();ctx.beginPath();ctx.arc(cx,cy,4,0,2*Math.PI);ctx.fillStyle='#F2F0EB';ctx.fill();
   document.getElementById('gaugeVal').textContent=(p*100).toFixed(1).replace('.',',')+'%';
   document.getElementById('gaugeVal').style.color=accColor(p);
   const badge=document.getElementById('gaugeBadge');
@@ -190,84 +201,121 @@ const critCls=c=>'c-'+c.toLowerCase();
 })();
 (function(){
   const tb=document.getElementById('tbDepositos');
-  let lastGroup=null;
-  let gSw=0,gSe=0,gDa=0,groupRows=[];
-  const HDR_ROW=`<tr style="background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em"><th style="padding:8px 12px;text-align:left">Depósito</th><th class="num" style="padding:8px 12px">SKUs comp.</th><th class="num" style="padding:8px 12px">Sem Dif.</th><th class="num" style="padding:8px 12px">Acur. SKU</th><th class="num" style="padding:8px 12px">Saldo WMS</th><th class="num" style="padding:8px 12px">Saldo ERP</th><th class="num" style="padding:8px 12px">Δ Saldo</th><th class="num" style="padding:8px 12px;min-width:160px">Acuracidade</th><th style="padding:8px 12px;text-align:left">Criticidade</th></tr>`;
-  function flushGroup(){
-    if(!lastGroup||groupRows.length===0)return;
-    const gDif=gSe-gSw;
-    const gAcc=gSe>0?Math.max(0,(gSe-Math.abs(gDif))/gSe):0;
-    const gCol=accColor(gAcc);const gPct=Math.min(100,Math.max(0,gAcc*100));
-    // 1) Linha de titulo do grupo (estoque)
-    tb.innerHTML+=`<tr style="background:linear-gradient(90deg,var(--accent)22,transparent);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)"><td colspan="9" style="padding:14px 14px 6px;border-top:2px solid var(--accent)">▸ ${lastGroup}</td></tr>`;
-    // 2) Cabecalho de colunas - logo abaixo do titulo do grupo
-    tb.innerHTML+=HDR_ROW;
-    // 3) Linhas de dados
-    tb.innerHTML+=groupRows.join('');
-    // 4) Subtotal do grupo
-    tb.innerHTML+=`<tr style="background:var(--surface2);font-weight:700"><td style="padding:10px 12px"><em>Subtotal ${lastGroup}</em></td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">${fmt(gSw)}</td><td class="num">${fmt(gSe)}</td><td class="num" style="color:${gDif>0?'var(--green)':gDif<0?'var(--red)':'var(--muted)'}">${gDif>0?'+':''}${fmt(gDif)}</td><td class="num"><span class="acc-cell" style="background:${gCol}22;color:${gCol};border:1px solid ${gCol}44">${fmtP(gAcc)}</span></td><td>—</td></tr>`;
-    groupRows=[];gSw=0;gSe=0;gDa=0;
-  }
+  // Agrupar depósitos por grupo
+  const groups=[];const groupMap={};
   DEPOSITOS.forEach(d=>{
-    if(d.grupo!==lastGroup){flushGroup();lastGroup=d.grupo;}
-    gSw+=d.sw;gSe+=d.se;gDa+=d.da;
-    const col=accColor(d.acc_q);const wPct=Math.min(100,Math.max(0,d.acc_q*100));
-    groupRows.push(`<tr><td><strong>${d.dep}</strong> <span style="color:var(--muted);font-size:11px">${d.nome}</span></td><td class="num">${fmt(d.comp)}</td><td class="num">${fmt(d.sd)}</td><td class="num">${fmtP(d.acc_sku)}</td><td class="num">${fmt(d.sw)}</td><td class="num">${fmt(d.se)}</td><td class="num" style="color:${d.dif>0?'var(--green)':d.dif<0?'var(--red)':'var(--muted)'}">${d.dif>0?'+':''}${fmt(d.dif)}</td><td class="num"><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${wPct}%;background:${col}"></div></div><span class="acc-cell" style="background:${col}22;color:${col};border:1px solid ${col}44">${fmtP(d.acc_q)}</span></div></td><td><span class="crit ${critCls(d.crit)}">${critLabel(d.crit)}</span></td></tr>`);
+    if(!groupMap[d.grupo]){groupMap[d.grupo]={nome:d.grupo,deps:[],sw:0,se:0};groups.push(groupMap[d.grupo]);}
+    groupMap[d.grupo].deps.push(d);
+    groupMap[d.grupo].sw+=d.sw;groupMap[d.grupo].se+=d.se;
   });
-  flushGroup();
+  const HDR=`<tr style="background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em"><th style="padding:7px 12px;text-align:left">Depósito</th><th class="num" style="padding:7px 8px">SKUs</th><th class="num" style="padding:7px 8px">Sem Dif.</th><th class="num" style="padding:7px 8px">Acur. SKU</th><th class="num" style="padding:7px 8px">Saldo WMS</th><th class="num" style="padding:7px 8px">Saldo ERP</th><th class="num" style="padding:7px 8px">Δ Saldo</th><th class="num" style="padding:7px 8px;min-width:150px">Acuracidade</th><th style="padding:7px 8px;text-align:left">Criticidade</th></tr>`;
+  let html='';
+  groups.forEach((g,gi)=>{
+    const gid='grp'+gi;
+    const gDif=g.se-g.sw;const gAcc=g.se>0?Math.max(0,(g.se-Math.abs(gDif))/g.se):0;
+    const gCol=accColor(gAcc);const gPct=Math.min(100,Math.max(0,gAcc*100));
+    const skusTot=g.deps.reduce((s,d)=>s+d.comp,0);const sdTot=g.deps.reduce((s,d)=>s+d.sd,0);
+    const accSkuGrp=skusTot>0?sdTot/skusTot:0;
+    // Linha do grupo clicável
+    html+=`<tr class="group-hdr-row" onclick="toggleGrp('${gid}')" style="background:linear-gradient(90deg,${gCol}18,transparent);border-top:2px solid ${gCol}66">
+      <td colspan="9" style="padding:12px 14px">
+        <div style="display:flex;align-items:center;gap:0">
+          <span class="toggle-icon" id="ico${gid}">+</span>
+          <strong style="color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.06em">${g.nome}</strong>
+          <span style="margin-left:auto;display:flex;gap:16px;font-size:11px;color:var(--muted)">
+            <span>📦 <strong style="color:var(--text)">${g.deps.length}</strong> depósitos</span>
+            <span>SKUs: <strong style="color:var(--text)">${fmt(skusTot)}</strong></span>
+            <span>WMS: <strong style="color:#1F8C4D">${fmt(g.sw)}</strong></span>
+            <span>ERP: <strong style="color:#28507E">${fmt(g.se)}</strong></span>
+            <span>Acur.: <strong style="color:${gCol}">${fmtP(gAcc)}</strong></span>
+          </span>
+        </div>
+      </td>
+    </tr>`;
+    // Cabeçalho de colunas (filho oculto)
+    html+=`<tr class="dep-child" data-grp="${gid}">${HDR.replace(/^<tr[^>]*>/,'').replace(/<\/tr>$','')}</tr>`.replace(/<tr[^>]*>/,'<tr class="dep-child" data-grp="'+gid+'" style="border:none">');
+    // Linhas de depósitos filhos
+    g.deps.forEach(d=>{
+      const col=accColor(d.acc_q);const wPct=Math.min(100,Math.max(0,d.acc_q*100));
+      html+=`<tr class="dep-child" data-grp="${gid}">
+        <td><strong style="color:var(--accent)">${d.dep}</strong> <span style="color:var(--muted);font-size:11px">${d.nome}</span></td>
+        <td class="num">${fmt(d.comp)}</td><td class="num">${fmt(d.sd)}</td>
+        <td class="num">${fmtP(d.acc_sku)}</td>
+        <td class="num">${fmt(d.sw)}</td><td class="num">${fmt(d.se)}</td>
+        <td class="num" style="color:${d.dif>0?'var(--green)':d.dif<0?'var(--red)':'var(--muted)'};font-weight:700">${d.dif>0?'+':''}${fmt(d.dif)}</td>
+        <td class="num"><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${wPct}%;background:${col}"></div></div><span class="acc-cell" style="background:${col}22;color:${col};border:1px solid ${col}44">${fmtP(d.acc_q)}</span></div></td>
+        <td><span class="crit ${critCls(d.crit)}">${critLabel(d.crit)}</span></td>
+      </tr>`;
+    });
+    // Subtotal filho
+    html+=`<tr class="dep-child" data-grp="${gid}" style="background:var(--surface2);font-weight:700">
+      <td style="padding:9px 12px;font-style:italic;color:var(--muted)">Subtotal ${g.nome}</td>
+      <td class="num">${fmt(skusTot)}</td><td class="num">${fmt(sdTot)}</td>
+      <td class="num">${fmtP(accSkuGrp)}</td>
+      <td class="num">${fmt(g.sw)}</td><td class="num">${fmt(g.se)}</td>
+      <td class="num" style="color:${gDif>0?'var(--green)':gDif<0?'var(--red)':'var(--muted)'};font-weight:700">${gDif>0?'+':''}${fmt(gDif)}</td>
+      <td class="num"><span class="acc-cell" style="background:${gCol}22;color:${gCol};border:1px solid ${gCol}44">${fmtP(gAcc)}</span></td>
+      <td>—</td>
+    </tr>`;
+  });
+  tb.innerHTML=html;
 })();
+// Toggle expand/collapse
+function toggleGrp(gid){
+  const rows=document.querySelectorAll(`[data-grp="${gid}"]`);
+  const ico=document.getElementById('ico'+gid);
+  const isOpen=ico.classList.contains('open');
+  rows.forEach(r=>{r.classList.toggle('dep-child',isOpen);r.classList.toggle('visible',!isOpen);});
+  ico.classList.toggle('open',!isOpen);
+  ico.textContent=isOpen?'+':'−';
+}
 (function(){
   const el=document.getElementById('legendaDep');
-  Object.entries(DEP_NAMES).forEach(([k,v])=>{el.innerHTML+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px"><strong style="color:var(--accent)">${k}</strong> — ${v}</span>`;});
+  Object.entries(DEP_NAMES).forEach(([k,v])=>{el.innerHTML+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text)"><strong style="color:var(--accent)">${k}</strong> — ${v}</span>`;});
 })();
 Chart.defaults.color='#1A1714';Chart.defaults.borderColor='#E2DCCB';
 Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
-// Paleta de 14 cores vibrantes e harmonicas
-const PIE_COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6','#a855f7','#eab308','#0ea5e9','#f43f5e'];
+// Paleta de 20 cores com alto contraste entre si (agrupadas por matiz alternado)
+const PIE_COLORS=['#28507E','#C77520','#1F8C4D','#B43A2E','#6A4990','#0C7A6F','#9F7E2C','#2563eb','#ea580c','#16a34a','#dc2626','#7c3aed','#0891b2','#b45309','#0f766e','#9d174d','#1d4ed8','#15803d','#c2410c','#7e22ce'];
 // Plugin: % branco no centro de cada fatia (sombra para legibilidade)
 const pctOnSlicePlugin={id:'pctOnSlice',afterDatasetsDraw(c){const{ctx}=c;c.data.datasets.forEach((ds,i)=>{const meta=c.getDatasetMeta(i);const tot=ds.data.reduce((s,x)=>s+x,0);meta.data.forEach((arc,idx)=>{const v=ds.data[idx];if(!v||v/tot<0.035)return;const pos=arc.tooltipPosition();const pct=(v/tot*100).toFixed(1).replace('.',',');ctx.save();ctx.font='800 12px Segoe UI';ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=6;ctx.shadowOffsetX=0;ctx.shadowOffsetY=1;ctx.fillText(pct+'%',pos.x,pos.y);ctx.restore();});});}};
 // Plugin: total no centro do donut
-const centerTotalPlugin={id:'centerTotal',afterDatasetsDraw(c){const ds=c.data.datasets[0];if(!ds||!ds.data)return;const tot=ds.data.reduce((s,x)=>s+x,0);if(!tot)return;const{ctx,chartArea}=c;if(!chartArea)return;const cx=(chartArea.left+chartArea.right)/2;const cy=(chartArea.top+chartArea.bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#94a3b8';ctx.font='600 10px Segoe UI';ctx.fillText('TOTAL',cx,cy-14);ctx.fillStyle='#f1f5f9';ctx.font='800 18px Segoe UI';const lbl=tot>=1e6?(tot/1e6).toFixed(1).replace('.',',')+' M':tot>=1e3?(tot/1e3).toFixed(0)+' K':tot.toLocaleString('pt-BR');ctx.fillText(lbl,cx,cy+6);ctx.restore();}};
-const pieOpts=()=>({responsive:true,maintainAspectRatio:false,cutout:'62%',layout:{padding:{top:6,bottom:8,left:6,right:6}},plugins:{legend:{position:'right',align:'center',labels:{font:{size:11,weight:'700'},color:'#1A1714',boxWidth:14,boxHeight:14,padding:8,usePointStyle:true,pointStyle:'circle',generateLabels:(c)=>{const ds=c.data.datasets[0];const tot=ds.data.reduce((s,x)=>s+x,0);const items=c.data.labels.map((l,i)=>{const v=ds.data[i];const pct=tot>0?(v/tot*100):0;return{text:` ${l}  ·  ${pct.toFixed(1).replace('.',',')}%`,fillStyle:ds.backgroundColor[i],strokeStyle:ds.backgroundColor[i],lineWidth:0,fontColor:'#1A1714',hidden:false,index:i,_v:v};});items.sort((a,b)=>b._v-a._v);return items;}}},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#4f8ef7',borderWidth:1.5,padding:14,titleColor:'#ffffff',titleFont:{size:13,weight:'800'},bodyColor:'#e2e8f0',bodyFont:{size:12,weight:'600'},displayColors:true,boxPadding:8,cornerRadius:10,caretSize:8,callbacks:{label:ctx=>{const v=ctx.parsed;const t=ctx.dataset.data.reduce((s,x)=>s+x,0);return `  ${v.toLocaleString('pt-BR',{maximumFractionDigits:0})}   (${(v/t*100).toFixed(2).replace('.',',')}%)`;}}}},animation:{animateRotate:true,animateScale:false,duration:1100,easing:'easeOutQuart'}});
+const centerTotalPlugin={id:'centerTotal',afterDatasetsDraw(c){const ds=c.data.datasets[0];if(!ds||!ds.data)return;const tot=ds.data.reduce((s,x)=>s+x,0);if(!tot)return;const{ctx,chartArea}=c;if(!chartArea)return;const cx=(chartArea.left+chartArea.right)/2;const cy=(chartArea.top+chartArea.bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#76695A';ctx.font='600 10px Segoe UI';ctx.fillText('TOTAL',cx,cy-14);ctx.fillStyle='#1A1714';ctx.font='800 18px Segoe UI';const lbl=tot>=1e6?(tot/1e6).toFixed(1).replace('.',',')+' M':tot>=1e3?(tot/1e3).toFixed(0)+' K':tot.toLocaleString('pt-BR');ctx.fillText(lbl,cx,cy+6);ctx.restore();}};
+const pieOpts=()=>({responsive:true,maintainAspectRatio:false,cutout:'62%',layout:{padding:{top:6,bottom:8,left:6,right:6}},plugins:{legend:{position:'right',align:'center',labels:{font:{size:11,weight:'700'},color:'#1A1714',boxWidth:14,boxHeight:14,padding:8,usePointStyle:true,pointStyle:'circle',generateLabels:(c)=>{const ds=c.data.datasets[0];const tot=ds.data.reduce((s,x)=>s+x,0);const items=c.data.labels.map((l,i)=>{const v=ds.data[i];const pct=tot>0?(v/tot*100):0;return{text:` ${l}  ·  ${pct.toFixed(1).replace('.',',')}%`,fillStyle:ds.backgroundColor[i],strokeStyle:ds.backgroundColor[i],lineWidth:0,fontColor:'#1A1714',hidden:false,index:i,_v:v};});items.sort((a,b)=>b._v-a._v);return items;}}},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#28507E',borderWidth:1.5,padding:14,titleColor:'#1A1714',titleFont:{size:13,weight:'800'},bodyColor:'#76695A',bodyFont:{size:12,weight:'600'},displayColors:true,boxPadding:8,cornerRadius:10,caretSize:8,callbacks:{label:ctx=>{const v=ctx.parsed;const t=ctx.dataset.data.reduce((s,x)=>s+x,0);return `  ${v.toLocaleString('pt-BR',{maximumFractionDigits:0})}   (${(v/t*100).toFixed(2).replace('.',',')}%)`;}}}},animation:{animateRotate:true,animateScale:false,duration:1100,easing:'easeOutQuart'}});
 function getFamsForStock(stk){if(stk==='__ALL__')return FAMILIAS;return FAMILIAS_POR_ESTOQUE[stk]||[];}
 function getDepsForStock(stk){if(stk==='__ALL__')return DEPOSITOS.filter(d=>d.se>0||d.sw>0);return DEPOSITOS.filter(d=>d.grupo===stk&&(d.se>0||d.sw>0));}
 const chartFamPie=new Chart(document.getElementById('chartFamPie'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:'#F2F0EB',borderWidth:4,hoverOffset:18,hoverBorderColor:'#ffffff',hoverBorderWidth:3,spacing:2}]},options:pieOpts(),plugins:[pctOnSlicePlugin,centerTotalPlugin]});
-const chartFamAcc=new Chart(document.getElementById('chartFamAcc'),{type:'bar',data:{labels:[],datasets:[{label:'Acuracidade',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.x.toFixed(2).replace('.',',')}%`}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'#E2DCCB'}},y:{ticks:{font:{size:10}},grid:{color:'#E2DCCB'}}}}});
+const chartFamAcc=new Chart(document.getElementById('chartFamAcc'),{type:'bar',data:{labels:[],datasets:[{label:'Acuracidade',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#28507E',borderWidth:1.5,padding:12,titleColor:'#1A1714',titleFont:{size:12,weight:'800'},bodyColor:'#76695A',bodyFont:{size:11},cornerRadius:8,callbacks:{title:ctx=>ctx[0].label,label:ctx=>{const v=ctx.parsed.x;const lbl=v>=95?'✅ ÓTIMA':v>=80?'✔ BOA':v>=60?'⚠ REGULAR':v>=40?'🔶 RUIM':'🔴 CRÍTICA';return '  Acuracidade: '+v.toFixed(1).replace('.',',')+'%  '+lbl;}}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'#E2DCCB99'}},y:{ticks:{font:{size:11,weight:'600'}},grid:{color:'#E2DCCB66'}}}}});
 const chartDepPie=new Chart(document.getElementById('chartDepPie'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:'#F2F0EB',borderWidth:4,hoverOffset:18,hoverBorderColor:'#ffffff',hoverBorderWidth:3,spacing:2}]},options:pieOpts(),plugins:[pctOnSlicePlugin,centerTotalPlugin]});
-const chartDepSaldo=new Chart(document.getElementById('chartDepSaldo'),{type:'bar',data:{labels:[],datasets:[{label:'WMS',data:[],backgroundColor:'#22c55e88',borderColor:'#22c55e',borderWidth:1.5},{label:'ERP',data:[],backgroundColor:'#4f8ef788',borderColor:'#4f8ef7',borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{font:{size:10}},grid:{color:'#E2DCCB'}},y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,font:{size:10}},grid:{color:'#E2DCCB'}}}}});
+const chartDepSaldo=new Chart(document.getElementById('chartDepSaldo'),{type:'bar',data:{labels:[],datasets:[{label:'WMS (físico)',data:[],backgroundColor:'#1F8C4D88',borderColor:'#1F8C4D',borderWidth:1.5,borderRadius:4},{label:'ERP (sistêmico)',data:[],backgroundColor:'#28507E88',borderColor:'#28507E',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:14,font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'rectRounded'}},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#28507E',borderWidth:1.5,padding:12,titleColor:'#1A1714',titleFont:{size:12,weight:'800'},bodyColor:'#76695A',bodyFont:{size:11},cornerRadius:8,callbacks:{label:ctx=>{const v=ctx.parsed.y;return '  '+ctx.dataset.label+': '+(v>=1e6?(v/1e6).toFixed(2).replace('.',',')+' M':v>=1e3?(v/1e3).toFixed(1).replace('.',',')+' K':v.toLocaleString('pt-BR'));},afterBody:ctx=>{if(ctx.length===2){const w=ctx[0].parsed.y,e=ctx[1].parsed.y,d=e-w,p=e>0?((e-Math.abs(d))/e*100):0;return['  ─────────────','  Δ: '+(d>0?'+':'')+(Math.abs(d)>=1e3?(d/1e3).toFixed(1)+'K':d.toFixed(0))+'   Acur.: '+p.toFixed(1).replace('.',',')+'%'];}return [];}}}},scales:{x:{ticks:{font:{size:10,weight:'600'}},grid:{color:'#E2DCCB66'}},y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,font:{size:10}},grid:{color:'#E2DCCB99'}}}}});
 
 function updateStockCharts(stk){
   CURRENT_STOCK=stk;
   const lbl=STOCK_SHORT[stk]||stk;
   const fams=getFamsForStock(stk);
   const deps=getDepsForStock(stk).sort((a,b)=>b.se-a.se);
-  // chartFamPie
   chartFamPie.data.labels=fams.map(f=>f.fam);
   chartFamPie.data.datasets[0].data=fams.map(f=>f.saldoERP);
   chartFamPie.data.datasets[0].backgroundColor=fams.map((_,i)=>PIE_COLORS[i%PIE_COLORS.length]);
   chartFamPie.update();
-  // chartFamAcc
   chartFamAcc.data.labels=fams.map(f=>f.fam);
   chartFamAcc.data.datasets[0].data=fams.map(f=>f.acc*100);
   chartFamAcc.data.datasets[0].backgroundColor=fams.map(f=>accColor(f.acc)+'aa');
   chartFamAcc.data.datasets[0].borderColor=fams.map(f=>accColor(f.acc));
   chartFamAcc.update();
-  // chartDepPie
   chartDepPie.data.labels=deps.map(d=>d.dep+' · '+(d.nome||''));
   chartDepPie.data.datasets[0].data=deps.map(d=>d.se);
   chartDepPie.data.datasets[0].backgroundColor=deps.map((_,i)=>PIE_COLORS[i%PIE_COLORS.length]);
   chartDepPie.update();
-  // chartDepSaldo (top 7)
   const depsTop=deps.slice(0,7);
   chartDepSaldo.data.labels=depsTop.map(d=>d.dep);
   chartDepSaldo.data.datasets[0].data=depsTop.map(d=>d.sw);
   chartDepSaldo.data.datasets[1].data=depsTop.map(d=>d.se);
   chartDepSaldo.update();
-  // titulos
-  document.getElementById('hdrFamPie').textContent=`Saldo por Família (ERP) · ${lbl}`;
-  document.getElementById('hdrFamAcc').textContent=`Acuracidade por Família (%) · ${lbl}`;
-  document.getElementById('hdrDepPie').textContent=`Saldo por Depósito (ERP) · ${lbl}`;
-  document.getElementById('hdrDepSaldo').textContent=`Saldo WMS × ERP — Depósitos · ${lbl}`;
+  document.getElementById('hdrFamPie').textContent='Saldo por Família (ERP) · '+lbl;
+  document.getElementById('hdrFamAcc').textContent='Acuracidade por Família (%) · '+lbl;
+  document.getElementById('hdrDepPie').textContent='Saldo por Depósito (ERP) · '+lbl;
+  document.getElementById('hdrDepSaldo').textContent='Saldo WMS × ERP — Depósitos · '+lbl;
 }
 document.querySelectorAll('#stockFilter .stock-btn').forEach(b=>{
   b.addEventListener('click',()=>{
@@ -276,7 +324,6 @@ document.querySelectorAll('#stockFilter .stock-btn').forEach(b=>{
     updateStockCharts(b.dataset.stock);
   });
 });
-// Inicializacao com Viana G9
 updateStockCharts(CURRENT_STOCK);
 </script>
 </body>
