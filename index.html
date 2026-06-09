@@ -6,78 +6,99 @@
 <title>Dashboard · Acuracidade de Estoque — GYP / YBERA</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#F2F0EB;--surface:#FFFFFF;--surface2:#F7F4ED;--surface3:#EEEBe4;--border:#E2DCCB;--text:#1A1714;--muted:#76695A;--accent:#28507E;--red:#B43A2E;--orange:#C77520;--yellow:#9F7E2C;--lime:#1F8C4D;--green:#1F8C4D;--senior:#0C7A6F;}
+/* ── TEMA TERRA QUENTE ─────────────────────────────────────────────── */
+:root{
+  --bg:#fdf7ee;--surface:#fffdf7;--surface2:#f5ead6;--surface3:#ecdcc0;
+  --border:#d9c9a8;--text:#2a1a08;--muted:#8a7055;--accent:#b55f1a;
+  --red:#c0392b;--orange:#d4580e;--yellow:#b8870a;--lime:#5a8f1e;
+  --green:#1e7d3a;--senior:#0e7a62;
+  --hdr-bg:#2a1a08;--hdr-text:#fdf0dc;
+  --card-shadow:0 2px 10px rgba(90,50,10,.10);
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
-.logo-senior{font-size:22px;font-weight:800;color:var(--senior);letter-spacing:-1px}
-.logo-ybera{font-size:13px;font-weight:600;color:var(--muted);border-left:1px solid var(--border);padding-left:16px}
+header{background:var(--hdr-bg);border-bottom:3px solid var(--accent);padding:10px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.logo-senior{font-size:22px;font-weight:800;color:#f9c06a;letter-spacing:-1px}
+.logo-ybera{font-size:13px;font-weight:600;color:#c8a87a;border-left:1px solid #5a3a18;padding-left:16px}
 .header-title{flex:1;text-align:center}
-.header-title h1{font-size:16px;font-weight:700}
-.header-title p{font-size:11px;color:var(--muted);margin-top:2px}
-.header-meta{font-size:11px;color:var(--muted);text-align:right;line-height:1.6}
-.header-ts{font-size:10px;color:var(--muted);text-align:right;line-height:1.5;border-left:1px solid var(--border);padding-left:14px}
-.header-ts strong{display:block;font-size:11px;color:var(--text);font-weight:600}
-.top-banner{background:linear-gradient(135deg,#F7F4ED,#EEEBe4);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:57px;z-index:49}
+.header-title h1{font-size:16px;font-weight:700;color:var(--hdr-text)}
+.header-title p{font-size:11px;color:#c8a87a;margin-top:2px}
+.header-ts{font-size:10px;color:#c8a87a;text-align:right;line-height:1.5;border-left:1px solid #5a3a18;padding-left:14px}
+.header-ts strong{display:block;font-size:11px;color:var(--hdr-text);font-weight:600}
+.top-banner{background:linear-gradient(135deg,#f5ead6,#fdf7ee);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:57px;z-index:49;box-shadow:0 1px 4px rgba(90,50,10,.07)}
 .top-banner span{font-size:12px;color:var(--muted)}
-.btn-analise{background:linear-gradient(135deg,#28507E,#6A4990);color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;text-decoration:none}
+.btn-analise{background:linear-gradient(135deg,#b55f1a,#8b3e00);color:#fdf0dc;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;text-decoration:none;box-shadow:0 2px 8px rgba(181,95,26,.35);transition:all .18s}
+.btn-analise:hover{background:linear-gradient(135deg,#c97030,#a34d10);transform:translateY(-1px)}
 main{padding:20px 24px;display:flex;flex-direction:column;gap:20px;max-width:1400px;margin:0 auto}
 .grid-top{display:grid;grid-template-columns:400px 1fr;gap:16px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--card-shadow)}
 .card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
 .gauge-card{display:flex;flex-direction:column;align-items:center;justify-content:center}
 .gauge-val{font-size:44px;font-weight:900;margin-top:6px;letter-spacing:-2px}
 .gauge-badge{font-size:12px;font-weight:700;padding:4px 14px;border-radius:99px;margin-top:6px}
-.zone-critica{background:#f0525222;color:#f05252;border:1px solid #f05252}
-.zone-ruim{background:#f9731622;color:#f97316;border:1px solid #f97316}
-.zone-regular{background:#facc1522;color:#facc15;border:1px solid #facc15}
-.zone-boa{background:#84cc1622;color:#84cc16;border:1px solid #84cc16}
-.zone-otima{background:#22c55e22;color:#22c55e;border:1px solid #22c55e}
+.zone-critica{background:#c0392b22;color:#c0392b;border:1px solid #c0392b}
+.zone-ruim{background:#d4580e22;color:#d4580e;border:1px solid #d4580e}
+.zone-regular{background:#b8870a22;color:#b8870a;border:1px solid #b8870a}
+.zone-boa{background:#5a8f1e22;color:#5a8f1e;border:1px solid #5a8f1e}
+.zone-otima{background:#1e7d3a22;color:#1e7d3a;border:1px solid #1e7d3a}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.kpi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.kpi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;transition:box-shadow .18s}
+.kpi:hover{box-shadow:0 4px 14px rgba(90,50,10,.12)}
 .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .kpi-val{font-size:22px;font-weight:800;margin-top:4px;color:var(--accent)}
 .saldo-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.saldo-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.saldo-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--card-shadow);transition:box-shadow .18s}
+.saldo-card:hover{box-shadow:0 6px 20px rgba(90,50,10,.14)}
 .saldo-label{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.05em}
 .saldo-val{font-size:28px;font-weight:800;margin-top:8px}
-.saldo-val.erp{color:#4f8ef7}.saldo-val.wms{color:#22c55e}.saldo-val.dif{color:#f97316}
+.saldo-val.erp{color:#1a5fa8}.saldo-val.wms{color:#1e7d3a}.saldo-val.dif{color:#d4580e}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
-td{padding:8px 12px;border-bottom:1px solid #2e335033}
-tr:hover td{background:#E2DCCB66}
+td{padding:8px 12px;border-bottom:1px solid #e8d9be}
+tr:hover td{background:#f5ead688}
 .num{text-align:right;font-variant-numeric:tabular-nums}
 .crit{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
-.c-critica{background:#f0525222;color:#f05252}.c-alta{background:#f9731622;color:#f97316}
-.c-media{background:#facc1522;color:#facc15}.c-baixa{background:#22c55e22;color:#22c55e}
+.c-critica{background:#c0392b22;color:#c0392b}.c-alta{background:#d4580e22;color:#d4580e}
+.c-media{background:#b8870a22;color:#b8870a}.c-baixa{background:#1e7d3a22;color:#1e7d3a}
 .acc-cell{font-weight:700;border-radius:4px;padding:2px 8px;display:inline-block}
 .bar-wrap{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .bar{position:relative;width:80px;height:8px;background:var(--surface3);border-radius:4px;overflow:hidden}
 .bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--card-shadow)}
 .chart-card h3{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
 .chart-card .canvas-wrap{position:relative;height:320px}
 .chart-card.pie-card .canvas-wrap{height:360px}
-.stock-filter{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(135deg,var(--surface2),var(--surface));border:1px solid var(--border);border-radius:12px}
+.stock-filter{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px 14px;background:linear-gradient(135deg,var(--surface2),var(--surface));border:1px solid var(--border);border-radius:12px;box-shadow:var(--card-shadow)}
 .stock-filter .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:flex;align-items:center;margin-right:6px}
 .stock-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.02em;transition:all .18s ease;display:flex;align-items:center;gap:8px}
 .stock-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
-.stock-btn.active{background:linear-gradient(135deg,var(--accent),#6A4990);border-color:var(--accent);color:#fff;box-shadow:0 4px 14px #28507E55}
+.stock-btn.active{background:linear-gradient(135deg,var(--accent),#8b3e00);border-color:var(--accent);color:#fdf0dc;box-shadow:0 4px 14px rgba(181,95,26,.35)}
 .stock-btn .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
-.stock-btn.active .dot{background:#fff}
-.alert-nota{background:#facc1511;border:1px solid #facc1544;border-radius:8px;padding:10px 14px;font-size:12px;color:#facc15}
-/* Depósitos expansíveis */
-.group-hdr-row{cursor:pointer;user-select:none}
-.group-hdr-row:hover td{filter:brightness(.96)}
-.toggle-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--accent);color:#fff;font-size:16px;font-weight:900;margin-right:10px;transition:transform .22s ease;flex-shrink:0;line-height:1}
-.toggle-icon.open{transform:rotate(45deg)}
-.dep-child{display:none}
-@keyframes depIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
-.dep-child.visible{display:table-row;animation:depIn .18s ease}
-/* Skeleton loading */
-.skeleton{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:4px;height:14px;display:inline-block}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.stock-btn.active .dot{background:#fdf0dc}
+.alert-nota{background:#b8870a14;border:1px solid #b8870a44;border-radius:8px;padding:10px 14px;font-size:12px;color:#7a5a08}
+/* ── ACCORDION DEPÓSITOS ──────────────────────────────────────────── */
+.dep-accordion{display:flex;flex-direction:column;gap:10px}
+.dep-group{border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow .2s}
+.dep-group:hover{box-shadow:0 4px 16px rgba(90,50,10,.12)}
+.dep-hdr{display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface2);cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid transparent}
+.dep-hdr:hover{background:var(--surface3)}
+.dep-hdr.open{background:linear-gradient(90deg,var(--accent)18,var(--surface2));border-bottom:1px solid var(--border)}
+.dep-hdr-icon{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fdf0dc;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0;transition:transform .3s;box-shadow:0 2px 8px rgba(181,95,26,.3)}
+.dep-hdr.open .dep-hdr-icon{transform:rotate(45deg)}
+.dep-grp-name{font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;flex:1}
+.dep-grp-stats{display:flex;gap:24px}
+.dep-grp-stat{display:flex;flex-direction:column;align-items:flex-end}
+.dep-grp-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.dep-grp-stat-val{font-size:14px;font-weight:800;margin-top:1px}
+.dep-grp-acc{font-size:16px;font-weight:900;margin-left:8px}
+.dep-body{display:none;overflow:hidden}
+.dep-body.open{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.dep-body table{margin:0;font-size:12px}
+.dep-body th{font-size:9px;padding:7px 12px}
+.dep-body td{padding:7px 12px}
+.dep-mini-tag{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-weight:700;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -88,11 +109,10 @@ tr:hover td{background:#E2DCCB66}
     <h1>Dashboard · Acuracidade de Estoque</h1>
     <p>Cruzamento de estoque entre WMS × ERP · GYP / YBERA</p>
   </div>
-  <div class="header-meta">Estoques: Viana G9 · Viana G3 · Guarapari G1</div>
-  <div class="header-ts">Última atualização<strong>08/06/2026 13:40</strong></div>
+  <div class="header-ts">Última atualização<strong>09/06/2026 17:45</strong></div>
 </header>
 <div class="top-banner">
-  <span>🔎 Explore os SKUs com maiores divergências</span>
+  <span>🔎 Explore os SKUs com maiores divergências — análise por lote, depósito e família</span>
   <a href="analise_skus.html" class="btn-analise">📊 Análise detalhada por SKU</a>
 </div>
 <main>
@@ -106,22 +126,21 @@ tr:hover td{background:#E2DCCB66}
     <div class="card">
       <div class="card-title">KPIs Gerais</div>
       <div class="kpi-grid">
-        <div class="kpi"><div class="kpi-label">SKUs Comparados</div><div class="kpi-val">912</div></div>
-        <div class="kpi"><div class="kpi-label">SKUs Sem Diferença</div><div class="kpi-val" style="color:var(--green)">8</div></div>
-        <div class="kpi"><div class="kpi-label">Acurácia por SKU</div><div class="kpi-val" style="color:var(--orange)">0,88%</div></div>
-        <div class="kpi"><div class="kpi-label">Diferença Absoluta Total</div><div class="kpi-val" style="color:var(--red)">11,8M</div></div>
+        <div class="kpi"><div class="kpi-label">SKUs Comparados</div><div class="kpi-val">1.152</div></div>
+        <div class="kpi"><div class="kpi-label">SKUs Sem Diferença</div><div class="kpi-val" style="color:var(--green)">7</div></div>
+        <div class="kpi"><div class="kpi-label">Acurácia por SKU</div><div class="kpi-val" style="color:var(--orange)">0,61%</div></div>
+        <div class="kpi"><div class="kpi-label">Diferença Absoluta Total</div><div class="kpi-val" style="color:var(--red)">15,5M</div></div>
       </div>
     </div>
   </div>
   <div class="saldo-row">
-    <div class="saldo-card"><div class="saldo-label">Saldo WMS (base física)</div><div class="saldo-val wms">10.741.301</div></div>
-    <div class="saldo-card"><div class="saldo-label">Saldo ERP (sistêmico)</div><div class="saldo-val erp">22.507.307</div></div>
-    <div class="saldo-card"><div class="saldo-label">Diferença Absoluta</div><div class="saldo-val dif">11.766.007</div></div>
+    <div class="saldo-card"><div class="saldo-label">Saldo WMS (base física)</div><div class="saldo-val wms">10.730.686</div></div>
+    <div class="saldo-card"><div class="saldo-label">Saldo ERP (sistêmico)</div><div class="saldo-val erp">26.205.314</div></div>
+    <div class="saldo-card"><div class="saldo-label">Diferença Absoluta</div><div class="saldo-val dif">15.534.983</div></div>
   </div>
   <div class="stock-filter" id="stockFilter">
     <span class="lbl">Filtrar gráficos por estoque:</span>
     <button class="stock-btn active" data-stock="Estoque de Viana G9"><span class="dot"></span>Viana G9</button>
-    <button class="stock-btn" data-stock="Estoque de Viana G3"><span class="dot"></span>Viana G3</button>
     <button class="stock-btn" data-stock="Estoque de Guarapari G1"><span class="dot"></span>Guarapari G1</button>
     <button class="stock-btn" data-stock="__ALL__"><span class="dot"></span>Todos os Estoques</button>
   </div>
@@ -143,183 +162,382 @@ tr:hover td{background:#E2DCCB66}
     <div class="chart-card pie-card"><h3 id="hdrDepPie">Saldo por Depósito (ERP) · Viana G9</h3><div class="canvas-wrap"><canvas id="chartDepPie"></canvas></div></div>
     <div class="chart-card"><h3 id="hdrDepSaldo">Saldo WMS × ERP — Depósitos · Viana G9</h3><div class="canvas-wrap"><canvas id="chartDepSaldo"></canvas></div></div>
   </div>
+
   <div class="card">
-    <div class="card-title">Detalhamento por Depósito</div>
-    <table><tbody id="tbDepositos"></tbody></table>
+    <div class="card-title">Detalhamento por Depósito — Expansível</div>
+    <div class="dep-accordion" id="depAccordion"></div>
   </div>
-  <div class="card">
-    <div class="card-title">Legenda de Depósitos</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px" id="legendaDep"></div>
-  </div>
+
   <div class="alert-nota">⚠️ <strong>Nota metodológica:</strong> Matéria-Prima em KG nativos · demais famílias em UN. Acuracidade = (Saldo ERP – |ERP − WMS|) / Saldo ERP, truncada em 0%.</div>
 </main>
 <script>
-const KPIS = {"skus_comparados": 912, "skus_sem_diferenca": 8, "acur_por_sku": 0.0088, "saldo_erp_un": 22411889.0, "saldo_wms_un": 10672129.0, "dif_un": 11739760.0, "saldo_erp_kg": 95418.0, "saldo_wms_kg": 69172.0, "dif_kg": 26247.0, "acur_global": 0.4738};
-const FAMILIAS = [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 222, "skuERP": 259, "saldoWMS": 69172.0, "saldoERP": 95418.0, "acc": 0.71}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 468, "skuERP": 489, "saldoWMS": 10235396.0, "saldoERP": 21480474.0, "acc": 0.4741}, {"fam": "GRANEL", "tag": "fam-3", "unit": "UN", "skuWMS": 3, "skuERP": 22, "saldoWMS": 433.0, "saldoERP": 891.0, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 83, "skuERP": 127, "saldoWMS": 432824.0, "saldoERP": 918627.0, "acc": 0.4461}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 12, "skuERP": 12, "saldoWMS": 3476.0, "saldoERP": 11896.0, "acc": 0.2922}];
-const FAMILIAS_POR_ESTOQUE = {"Estoque de Viana G9": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 18, "skuERP": 222, "saldoWMS": 9133.099999999999, "saldoERP": 9195.855000000012, "acc": 0.9891304288725736}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 468, "skuERP": 473, "saldoWMS": 10234486.0, "saldoERP": 10615583.0, "acc": 0.9108679193596809}, {"fam": "GRANEL", "tag": "fam-3", "unit": "UN", "skuWMS": 3, "skuERP": 0, "saldoWMS": 433.0, "saldoERP": 0.0, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 83, "skuERP": 87, "saldoWMS": 432824.0, "saldoERP": 471645.0, "acc": 0.7794760890076222}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 12, "skuERP": 12, "saldoWMS": 3476.0, "saldoERP": 6018.0, "acc": 0.577600531738119}], "Estoque de Viana G3": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 0, "skuERP": 236, "saldoWMS": 0.0, "saldoERP": 83.52999999999989, "acc": 0.0}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 0, "skuERP": 254, "saldoWMS": 0.0, "saldoERP": 157519.7, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 0, "skuERP": 61, "saldoWMS": 0.0, "saldoERP": 2364.0, "acc": 0.0}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 0, "skuERP": 3, "saldoWMS": 0.0, "saldoERP": 7.0, "acc": 0.0}], "Estoque de Guarapari G1": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 221, "skuERP": 221, "saldoWMS": 60038.52999999996, "saldoERP": 60078.31953999997, "acc": 0.9690081807504565}]};
-const DEPOSITOS = [{"dep": "1100", "nome": "DEP. VIANA G9", "grupo": "Estoque de Viana G9", "comp": 579, "sd": 367, "acc_sku": 0.6339, "sw": 10390386.6, "se": 10814927.0, "da": 424540.4000000004, "dif": 424540.4000000004, "acc_q": 0.9032, "crit": "CRITICA"}, {"dep": "1101", "nome": "DEP. Avaria/Bloqueado G9", "grupo": "Estoque de Viana G9", "comp": 6, "sd": 3, "acc_sku": 0.5, "sw": 20702.0, "se": 19527.0, "da": 1175.0, "dif": -1175.0, "acc_q": 0.9398, "crit": "CRITICA"}, {"dep": "1102", "nome": "DEP. Vencidos G9", "grupo": "Estoque de Viana G9", "comp": 17, "sd": 13, "acc_sku": 0.7647, "sw": 19986.0, "se": 17461.0, "da": 2525.0, "dif": -2525.0, "acc_q": 0.8554, "crit": "CRITICA"}, {"dep": "1103", "nome": "DEP. Perdas/Inventario G9", "grupo": "Estoque de Viana G9", "comp": 101, "sd": 99, "acc_sku": 0.9802, "sw": 249277.0, "se": 248615.0, "da": 662.0, "dif": -662.0, "acc_q": 0.9957, "crit": "CRITICA"}, {"dep": "1010", "nome": "DEP. Retencao G9", "grupo": "Estoque de Viana G9", "comp": 412, "sd": 0, "acc_sku": 0.0, "sw": 0.5, "se": 1911.855, "da": 1911.355, "dif": 1911.355, "acc_q": 0.0003, "crit": "CRITICA"}, {"dep": "3100", "nome": "DEP. Fiscal Viana G9", "grupo": "Estoque de Viana G9", "comp": 598, "sd": 347, "acc_sku": 0.5803, "sw": 10680351.6, "se": 10957947.5, "da": 277595.9000000004, "dif": 277595.9000000004, "acc_q": 0.9179, "crit": "CRITICA"}, {"dep": "1-100", "nome": "DEP. VIANA G3", "grupo": "Estoque de Viana G3", "comp": 6, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 154776.7, "da": 154776.7, "dif": 154776.7, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-150", "nome": "DEP. Avaria/Bloqueado G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 4.8, "da": 4.8, "dif": 4.8, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-160", "nome": "DEP. QUARENTENA G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 1797.0, "da": 1797.0, "dif": 1797.0, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "1-700", "nome": "DEP. RETENCAO G3", "grupo": "Estoque de Viana G3", "comp": 550, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 3395.73, "da": 3395.73, "dif": 3395.73, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-100", "nome": "DEP. Fiscal Viana G3", "grupo": "Estoque de Viana G3", "comp": 55, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 27845.45222, "da": 27845.45222, "dif": 27845.45222, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "1200", "nome": "DEP. GUARAPARI G1", "grupo": "Estoque de Guarapari G1", "comp": 220, "sd": 147, "acc_sku": 0.6682, "sw": 59604.71, "se": 59568.23214, "da": 36.477859999999055, "dif": -36.477859999999055, "acc_q": 0.97, "crit": "CRITICA"}, {"dep": "1203", "nome": "DEP. Perdas/Inventario G1", "grupo": "Estoque de Guarapari G1", "comp": 73, "sd": 45, "acc_sku": 0.6164, "sw": 433.82, "se": 510.0874, "da": 76.26740000000001, "dif": 76.26740000000001, "acc_q": 0.8505, "crit": "MEDIA"}];
-const CRIT_BREAKDOWN = {"CRITICA": [{"familia": "MATERIA_PRIMA", "skus": 259, "lotes": 1162}, {"familia": "EMBALAGEM", "skus": 485, "lotes": 2195}, {"familia": "GRANEL", "skus": 25, "lotes": 27}, {"familia": "PRODUTO_ACABADO", "skus": 127, "lotes": 435}, {"familia": "MATERIAL_APOIO", "skus": 9, "lotes": 26}], "ALTA": [{"familia": "MATERIA_PRIMA", "skus": 12, "lotes": 13}, {"familia": "EMBALAGEM", "skus": 35, "lotes": 40}, {"familia": "PRODUTO_ACABADO", "skus": 1, "lotes": 1}], "MEDIA": [{"familia": "MATERIA_PRIMA", "skus": 14, "lotes": 14}, {"familia": "EMBALAGEM", "skus": 23, "lotes": 24}, {"familia": "PRODUTO_ACABADO", "skus": 1, "lotes": 1}], "BAIXA": [{"familia": "MATERIA_PRIMA", "skus": 29, "lotes": 30}, {"familia": "EMBALAGEM", "skus": 8, "lotes": 8}, {"familia": "PRODUTO_ACABADO", "skus": 1, "lotes": 1}]};
-const STOCK_SHORT={'Estoque de Viana G9':'Viana G9','Estoque de Viana G3':'Viana G3','Estoque de Guarapari G1':'Guarapari G1','__ALL__':'Todos os Estoques'};
+const KPIS = {"skus_comparados":1152,"skus_sem_diferenca":7,"acur_por_sku":0.0061,"saldo_erp":26205314.0,"saldo_wms":10730686.0,"dif_abs":15534983.0,"acur_global":0.4072};
+const FAMILIAS = [{"fam":"MATERIA-PRIMA","tag":"fam-1","unit":"KG","skuWMS":222,"skuERP":283,"saldoWMS":69206.53,"saldoERP":177616.4,"acc":0.3896},{"fam":"EMBALAGEM","tag":"fam-2","unit":"UN","skuWMS":468,"skuERP":559,"saldoWMS":10236266.0,"saldoERP":24894913.91,"acc":0.4112},{"fam":"GRANEL","tag":"fam-3","unit":"UN","skuWMS":3,"skuERP":93,"saldoWMS":433.0,"saldoERP":124823.6,"acc":0.0035},{"fam":"PRODUTO ACABADO","tag":"fam-4","unit":"UN","skuWMS":83,"skuERP":201,"saldoWMS":421304.0,"saldoERP":996061.0,"acc":0.423},{"fam":"MATERIAL APOIO","tag":"fam-5","unit":"UN","skuWMS":12,"skuERP":13,"saldoWMS":3476.0,"saldoERP":11899.0,"acc":0.2921}];
+const FAMILIAS_POR_ESTOQUE = {"Estoque de Viana G9":[{"fam":"MATERIA-PRIMA","tag":"fam-1","unit":"KG","skuWMS":17,"skuERP":222,"saldoWMS":9132.6,"saldoERP":20524.36,"acc":0.445},{"fam":"EMBALAGEM","tag":"fam-2","unit":"UN","skuWMS":468,"skuERP":477,"saldoWMS":10056368.0,"saldoERP":21262731.0,"acc":0.473},{"fam":"GRANEL","tag":"fam-3","unit":"UN","skuWMS":0,"skuERP":0,"saldoWMS":0.0,"saldoERP":0.0,"acc":0},{"fam":"PRODUTO ACABADO","tag":"fam-4","unit":"UN","skuWMS":83,"skuERP":91,"saldoWMS":375784.0,"saldoERP":902260.0,"acc":0.4165},{"fam":"MATERIAL APOIO","tag":"fam-5","unit":"UN","skuWMS":12,"skuERP":12,"saldoWMS":3476.0,"saldoERP":11853.0,"acc":0.2933}],"Estoque de Guarapari G1":[{"fam":"MATERIA-PRIMA","tag":"fam-1","unit":"KG","skuWMS":221,"skuERP":221,"saldoWMS":50823.5,"saldoERP":56834.99,"acc":0.8942},{"fam":"EMBALAGEM","tag":"fam-2","unit":"UN","skuWMS":0,"skuERP":0,"saldoWMS":0.0,"saldoERP":0.0,"acc":0},{"fam":"GRANEL","tag":"fam-3","unit":"UN","skuWMS":0,"skuERP":0,"saldoWMS":0.0,"saldoERP":0.0,"acc":0},{"fam":"PRODUTO ACABADO","tag":"fam-4","unit":"UN","skuWMS":0,"skuERP":0,"saldoWMS":0.0,"saldoERP":0.0,"acc":0},{"fam":"MATERIAL APOIO","tag":"fam-5","unit":"UN","skuWMS":0,"skuERP":0,"saldoWMS":0.0,"saldoERP":0.0,"acc":0}]};
+const DEPOSITOS = [{"dep":"1100","nome":"VIANA G9","grupo":"Estoque de Viana G9","comp":576,"sd":376,"acc_sku":0.6528,"sw":10154795.6,"se":10759877.0,"da":979934.6,"dif":605081.4,"acc_q":0.9089,"crit":"CRITICA"},{"dep":"1101","nome":"Avaria/Bloqueado G9","grupo":"Estoque de Viana G9","comp":6,"sd":3,"acc_sku":0.5,"sw":20702.0,"se":19527.0,"da":1175.0,"dif":-1175.0,"acc_q":0.9398,"crit":"CRITICA"},{"dep":"1102","nome":"Vencidos G9","grupo":"Estoque de Viana G9","comp":17,"sd":13,"acc_sku":0.7647,"sw":19986.0,"se":17461.0,"da":2525.0,"dif":-2525.0,"acc_q":0.8554,"crit":"CRITICA"},{"dep":"1103","nome":"Perdas/Inventário G9","grupo":"Estoque de Viana G9","comp":101,"sd":99,"acc_sku":0.9802,"sw":249277.0,"se":248615.0,"da":1074.0,"dif":-662.0,"acc_q":0.9957,"crit":"CRITICA"},{"dep":"1010","nome":"Retenção G9","grupo":"Estoque de Viana G9","comp":413,"sd":0,"acc_sku":0.0,"sw":0.5,"se":1913.86,"da":1913.36,"dif":1913.36,"acc_q":0.0003,"crit":"CRITICA"},{"dep":"3100","nome":"Fiscal Viana G9","grupo":"Estoque de Viana G9","comp":595,"sd":345,"acc_sku":0.5798,"sw":10444760.6,"se":11149974.5,"da":1151670.7,"dif":705213.9,"acc_q":0.8967,"crit":"CRITICA"},{"dep":"1200","nome":"GUARAPARI G1","grupo":"Estoque de Guarapari G1","comp":220,"sd":149,"acc_sku":0.6773,"sw":50389.68,"se":56324.9,"da":6043.48,"dif":5935.22,"acc_q":0.8927,"crit":"CRITICA"},{"dep":"1203","nome":"Perdas/Inventário G1","grupo":"Estoque de Guarapari G1","comp":73,"sd":45,"acc_sku":0.6164,"sw":433.82,"se":510.09,"da":76.27,"dif":76.27,"acc_q":0.8505,"crit":"MEDIA"}];
+const STOCK_SHORT={'Estoque de Viana G9':'Viana G9','Estoque de Guarapari G1':'Guarapari G1','__ALL__':'Todos os Estoques'};
 let CURRENT_STOCK='Estoque de Viana G9';
-const DEP_NAMES={'1100':'DEP. VIANA G9','1101':'DEP. Avaria/Bloqueado G9','1102':'DEP. Vencidos G9','1103':'DEP. Perdas/Inventario G9','1010':'DEP. Retencao G9','3100':'DEP. Fiscal Viana G9','1-100':'DEP. VIANA G3','3-150':'DEP. Avaria/Bloqueado G3','3-160':'DEP. QUARENTENA G3','3-180':'DEP. PRODUTOS REPROVADOS G3','3-700':'DEP. INVENTARIO AJUSTE G3','1-700':'DEP. RETENCAO G3','3-100':'DEP. Fiscal Viana G3','1200':'DEP. GUARAPARI G1','1203':'DEP. Perdas/Inventario G1'};
-const fmt=n=>n==null?'—':Number(n).toLocaleString('pt-BR',{maximumFractionDigits:0});
-const fmtP=v=>v==null?'—':(v*100).toFixed(1).replace('.',',')+' %';
-function accColor(v){if(v>=.95)return'#22c55e';if(v>=.80)return'#84cc16';if(v>=.60)return'#facc15';if(v>=.40)return'#f97316';return'#f05252';}
-const critLabel=c=>({'CRITICA':'CRÍTICA','ALTA':'ALTA','MEDIA':'MÉDIA','BAIXA':'BAIXA'}[c]||'—');
-const critCls=c=>'c-'+c.toLowerCase();
+const fmt=function(n){return n==null?'—':Number(n).toLocaleString('pt-BR',{maximumFractionDigits:0});};
+const fmtP=function(v){return v==null?'—':(v*100).toFixed(1).replace('.',',')+' %';};
+function accColor(v){if(v>=.95)return'#1e7d3a';if(v>=.80)return'#5a8f1e';if(v>=.60)return'#b8870a';if(v>=.40)return'#d4580e';return'#c0392b';}
+const critLabel=function(c){return({'CRITICA':'CRÍTICA','ALTA':'ALTA','MEDIA':'MÉDIA','BAIXA':'BAIXA'}[c]||'—');};
+const critCls=function(c){return 'c-'+c.toLowerCase();};
+
+/* ── GAUGE ─────────────────────────────────────────────────────────── */
 (function(){
-  const p=0.473800;
-  const canvas=document.getElementById('gauge');const ctx=canvas.getContext('2d');
-  const W=370,H=210,cx=W/2,cy=H-20,R=150,ri=85;
-  const zones=[{f:0,t:.10,c:'#7f1d1d'},{f:.10,t:.20,c:'#dc2626'},{f:.20,t:.30,c:'#ea580c'},{f:.30,t:.40,c:'#f97316'},{f:.40,t:.50,c:'#facc15'},{f:.50,t:.60,c:'#d4d62a'},{f:.60,t:.70,c:'#a3e635'},{f:.70,t:.80,c:'#84cc16'},{f:.80,t:.90,c:'#4ade80'},{f:.90,t:1.0,c:'#22c55e'}];
-  zones.forEach(z=>{const a1=Math.PI+z.f*Math.PI,a2=Math.PI+z.t*Math.PI;ctx.beginPath();ctx.arc(cx,cy,R,a1,a2,false);ctx.arc(cx,cy,ri,a2,a1,true);ctx.closePath();ctx.fillStyle=z.c+'bb';ctx.fill();});
-  ctx.beginPath();ctx.arc(cx,cy,R,Math.PI,2*Math.PI,false);ctx.strokeStyle='#E2DCCB';ctx.lineWidth=1;ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,ri,Math.PI,2*Math.PI,false);ctx.strokeStyle='#E2DCCB';ctx.lineWidth=1;ctx.stroke();
-  ctx.fillStyle='#7a829988';ctx.font='10px Segoe UI';ctx.textAlign='center';
-  [0,20,40,60,80,100].forEach(v=>{const a=Math.PI+(v/100)*Math.PI;ctx.fillText(v+'%',cx+(R+14)*Math.cos(a),cy+(R+14)*Math.sin(a));});
-  const ang=Math.PI+p*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(R-8)*Math.cos(ang),cy+(R-8)*Math.sin(ang));ctx.strokeStyle='#000000';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,8,0,2*Math.PI);ctx.fillStyle='#000000';ctx.fill();ctx.beginPath();ctx.arc(cx,cy,4,0,2*Math.PI);ctx.fillStyle='#F2F0EB';ctx.fill();
-  document.getElementById('gaugeVal').textContent=(p*100).toFixed(1).replace('.',',')+'%';
+  var p=0.4072;
+  var canvas=document.getElementById('gauge');
+  var ctx=canvas.getContext('2d');
+  var W=370,H=210,cx=W/2,cy=H-20,R=150,ri=85;
+  var zones=[{f:0,t:.10,c:'#7f1d1d'},{f:.10,t:.20,c:'#dc2626'},{f:.20,t:.30,c:'#ea580c'},{f:.30,t:.40,c:'#f97316'},{f:.40,t:.50,c:'#facc15'},{f:.50,t:.60,c:'#d4d62a'},{f:.60,t:.70,c:'#a3e635'},{f:.70,t:.80,c:'#84cc16'},{f:.80,t:.90,c:'#4ade80'},{f:.90,t:1.0,c:'#22c55e'}];
+  zones.forEach(function(z){var a1=Math.PI+z.f*Math.PI,a2=Math.PI+z.t*Math.PI;ctx.beginPath();ctx.arc(cx,cy,R,a1,a2,false);ctx.arc(cx,cy,ri,a2,a1,true);ctx.closePath();ctx.fillStyle=z.c+'bb';ctx.fill();});
+  ctx.beginPath();ctx.arc(cx,cy,R,Math.PI,2*Math.PI,false);ctx.strokeStyle='#d4c4a866';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,ri,Math.PI,2*Math.PI,false);ctx.strokeStyle='#d4c4a866';ctx.lineWidth=1;ctx.stroke();
+  ctx.fillStyle='#8a705566';ctx.font='10px Segoe UI';ctx.textAlign='center';
+  [0,20,40,60,80,100].forEach(function(v){var a=Math.PI+(v/100)*Math.PI;ctx.fillText(v+'%',cx+(R+14)*Math.cos(a),cy+(R+14)*Math.sin(a));});
+  var ang=Math.PI+p*Math.PI;
+  /* ponteiro preto, espessura 4 para máxima visibilidade */
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(R-8)*Math.cos(ang),cy+(R-8)*Math.sin(ang));
+  ctx.strokeStyle='#000000';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,9,0,2*Math.PI);ctx.fillStyle='#000000';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,4,0,2*Math.PI);ctx.fillStyle='#fdf7ee';ctx.fill();
+  document.getElementById('gaugeVal').textContent=(p*100).toFixed(1).replace('.',',')+' %';
   document.getElementById('gaugeVal').style.color=accColor(p);
-  const badge=document.getElementById('gaugeBadge');
-  let label='CRÍTICA',cls='zone-critica';
+  var badge=document.getElementById('gaugeBadge');
+  var label='CRÍTICA',cls='zone-critica';
   if(p>=.90){label='ÓTIMA';cls='zone-otima';}else if(p>=.75){label='BOA';cls='zone-boa';}else if(p>=.50){label='REGULAR';cls='zone-regular';}else if(p>=.30){label='RUIM';cls='zone-ruim';}
   badge.textContent=label;badge.className='gauge-badge '+cls;
 })();
-(function(){
-  const tb=document.getElementById('tbFamilias');let tsw=0,tse=0,tnw=0,tne=0;
-  FAMILIAS.forEach(f=>{
-    tsw+=f.saldoWMS;tse+=f.saldoERP;tnw+=f.skuWMS;tne+=f.skuERP;
-    const dSku=f.skuERP-f.skuWMS;
-    const pDsku=((Math.abs(dSku)/Math.max(f.skuWMS,f.skuERP,1))*100).toFixed(1).replace('.',',');
-    const dSaldo=f.saldoERP-f.saldoWMS;const col=accColor(f.acc);
-    const wPct=Math.min(100,Math.max(0,f.acc*100));
-    tb.innerHTML+=`<tr><td><strong>${f.fam}</strong> <span style="color:var(--muted);font-size:10px">(${f.unit})</span></td><td class="num">${fmt(f.skuWMS)}</td><td class="num">${fmt(f.skuERP)}</td><td class="num" style="color:${dSku>0?'var(--green)':dSku<0?'var(--red)':'var(--muted)'}">${dSku>0?'+':''}${fmt(dSku)}</td><td class="num">${pDsku}%</td><td class="num">${fmt(f.saldoWMS)}</td><td class="num">${fmt(f.saldoERP)}</td><td class="num" style="color:${dSaldo>0?'var(--green)':dSaldo<0?'var(--red)':'var(--muted)'}">${dSaldo>0?'+':''}${fmt(dSaldo)}</td><td class="num"><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${wPct}%;background:${col}"></div></div><span class="acc-cell" style="background:${col}22;color:${col};border:1px solid ${col}44">${fmtP(f.acc)}</span></div></td></tr>`;
-  });
-  const dT=tse-tsw;const dnSku=tne-tnw;
-  tb.innerHTML+=`<tr style="background:var(--surface2);font-weight:700"><td>TOTAL</td><td class="num">${fmt(tnw)}</td><td class="num">${fmt(tne)}</td><td class="num" style="color:${dnSku>0?'var(--green)':dnSku<0?'var(--red)':'var(--muted)'}">${dnSku>0?'+':''}${fmt(dnSku)}</td><td class="num">—</td><td class="num">${fmt(tsw)}</td><td class="num">${fmt(tse)}</td><td class="num" style="color:${dT>0?'var(--green)':dT<0?'var(--red)':'var(--muted)'}">${dT>0?'+':''}${fmt(dT)}</td><td class="num">—</td></tr>`;
-})();
-(function(){
-  const tb=document.getElementById('tbDepositos');
-  // Agrupar depósitos por grupo
-  const groups=[];const groupMap={};
-  DEPOSITOS.forEach(d=>{
-    if(!groupMap[d.grupo]){groupMap[d.grupo]={nome:d.grupo,deps:[],sw:0,se:0};groups.push(groupMap[d.grupo]);}
-    groupMap[d.grupo].deps.push(d);
-    groupMap[d.grupo].sw+=d.sw;groupMap[d.grupo].se+=d.se;
-  });
-  const HDR=`<tr style="background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em"><th style="padding:7px 12px;text-align:left">Depósito</th><th class="num" style="padding:7px 8px">SKUs</th><th class="num" style="padding:7px 8px">Sem Dif.</th><th class="num" style="padding:7px 8px">Acur. SKU</th><th class="num" style="padding:7px 8px">Saldo WMS</th><th class="num" style="padding:7px 8px">Saldo ERP</th><th class="num" style="padding:7px 8px">Δ Saldo</th><th class="num" style="padding:7px 8px;min-width:150px">Acuracidade</th><th style="padding:7px 8px;text-align:left">Criticidade</th></tr>`;
-  let html='';
-  groups.forEach((g,gi)=>{
-    const gid='grp'+gi;
-    const gDif=g.se-g.sw;const gAcc=g.se>0?Math.max(0,(g.se-Math.abs(gDif))/g.se):0;
-    const gCol=accColor(gAcc);const gPct=Math.min(100,Math.max(0,gAcc*100));
-    const skusTot=g.deps.reduce((s,d)=>s+d.comp,0);const sdTot=g.deps.reduce((s,d)=>s+d.sd,0);
-    const accSkuGrp=skusTot>0?sdTot/skusTot:0;
-    // Linha do grupo clicável
-    html+=`<tr class="group-hdr-row" onclick="toggleGrp('${gid}')" style="background:linear-gradient(90deg,${gCol}18,transparent);border-top:2px solid ${gCol}66">
-      <td colspan="9" style="padding:12px 14px">
-        <div style="display:flex;align-items:center;gap:0">
-          <span class="toggle-icon" id="ico${gid}">+</span>
-          <strong style="color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.06em">${g.nome}</strong>
-          <span style="margin-left:auto;display:flex;gap:16px;font-size:11px;color:var(--muted)">
-            <span>📦 <strong style="color:var(--text)">${g.deps.length}</strong> depósitos</span>
-            <span>SKUs: <strong style="color:var(--text)">${fmt(skusTot)}</strong></span>
-            <span>WMS: <strong style="color:#1F8C4D">${fmt(g.sw)}</strong></span>
-            <span>ERP: <strong style="color:#28507E">${fmt(g.se)}</strong></span>
-            <span>Acur.: <strong style="color:${gCol}">${fmtP(gAcc)}</strong></span>
-          </span>
-        </div>
-      </td>
-    </tr>`;
-    // Cabeçalho de colunas (filho oculto)
-    html+=`<tr class="dep-child" data-grp="${gid}">${HDR.replace(/^<tr[^>]*>/,'').replace(/<\/tr>$/,'')}</tr>`.replace(/<tr[^>]*>/,'<tr class="dep-child" data-grp="'+gid+'" style="border:none">');
-    // Linhas de depósitos filhos
-    g.deps.forEach(d=>{
-      const col=accColor(d.acc_q);const wPct=Math.min(100,Math.max(0,d.acc_q*100));
-      html+=`<tr class="dep-child" data-grp="${gid}">
-        <td><strong style="color:var(--accent)">${d.dep}</strong> <span style="color:var(--muted);font-size:11px">${d.nome}</span></td>
-        <td class="num">${fmt(d.comp)}</td><td class="num">${fmt(d.sd)}</td>
-        <td class="num">${fmtP(d.acc_sku)}</td>
-        <td class="num">${fmt(d.sw)}</td><td class="num">${fmt(d.se)}</td>
-        <td class="num" style="color:${d.dif>0?'var(--green)':d.dif<0?'var(--red)':'var(--muted)'};font-weight:700">${d.dif>0?'+':''}${fmt(d.dif)}</td>
-        <td class="num"><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${wPct}%;background:${col}"></div></div><span class="acc-cell" style="background:${col}22;color:${col};border:1px solid ${col}44">${fmtP(d.acc_q)}</span></div></td>
-        <td><span class="crit ${critCls(d.crit)}">${critLabel(d.crit)}</span></td>
-      </tr>`;
-    });
-    // Subtotal filho
-    html+=`<tr class="dep-child" data-grp="${gid}" style="background:var(--surface2);font-weight:700">
-      <td style="padding:9px 12px;font-style:italic;color:var(--muted)">Subtotal ${g.nome}</td>
-      <td class="num">${fmt(skusTot)}</td><td class="num">${fmt(sdTot)}</td>
-      <td class="num">${fmtP(accSkuGrp)}</td>
-      <td class="num">${fmt(g.sw)}</td><td class="num">${fmt(g.se)}</td>
-      <td class="num" style="color:${gDif>0?'var(--green)':gDif<0?'var(--red)':'var(--muted)'};font-weight:700">${gDif>0?'+':''}${fmt(gDif)}</td>
-      <td class="num"><span class="acc-cell" style="background:${gCol}22;color:${gCol};border:1px solid ${gCol}44">${fmtP(gAcc)}</span></td>
-      <td>—</td>
-    </tr>`;
-  });
-  tb.innerHTML=html;
-})();
-// Toggle expand/collapse
-function toggleGrp(gid){
-  const rows=document.querySelectorAll(`[data-grp="${gid}"]`);
-  const ico=document.getElementById('ico'+gid);
-  const isOpen=ico.classList.contains('open');
-  rows.forEach(r=>{r.classList.toggle('dep-child',isOpen);r.classList.toggle('visible',!isOpen);});
-  ico.classList.toggle('open',!isOpen);
-  ico.textContent=isOpen?'+':'−';
-}
-(function(){
-  const el=document.getElementById('legendaDep');
-  Object.entries(DEP_NAMES).forEach(([k,v])=>{el.innerHTML+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text)"><strong style="color:var(--accent)">${k}</strong> — ${v}</span>`;});
-})();
-Chart.defaults.color='#1A1714';Chart.defaults.borderColor='#E2DCCB';
-Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
-// Paleta de 20 cores com alto contraste entre si (agrupadas por matiz alternado)
-const PIE_COLORS=['#28507E','#C77520','#1F8C4D','#B43A2E','#6A4990','#0C7A6F','#9F7E2C','#2563eb','#ea580c','#16a34a','#dc2626','#7c3aed','#0891b2','#b45309','#0f766e','#9d174d','#1d4ed8','#15803d','#c2410c','#7e22ce'];
-// Plugin: % branco no centro de cada fatia (sombra para legibilidade)
-const pctOnSlicePlugin={id:'pctOnSlice',afterDatasetsDraw(c){const{ctx}=c;c.data.datasets.forEach((ds,i)=>{const meta=c.getDatasetMeta(i);const tot=ds.data.reduce((s,x)=>s+x,0);meta.data.forEach((arc,idx)=>{const v=ds.data[idx];if(!v||v/tot<0.035)return;const pos=arc.tooltipPosition();const pct=(v/tot*100).toFixed(1).replace('.',',');ctx.save();ctx.font='800 12px Segoe UI';ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=6;ctx.shadowOffsetX=0;ctx.shadowOffsetY=1;ctx.fillText(pct+'%',pos.x,pos.y);ctx.restore();});});}};
-// Plugin: total no centro do donut
-const centerTotalPlugin={id:'centerTotal',afterDatasetsDraw(c){const ds=c.data.datasets[0];if(!ds||!ds.data)return;const tot=ds.data.reduce((s,x)=>s+x,0);if(!tot)return;const{ctx,chartArea}=c;if(!chartArea)return;const cx=(chartArea.left+chartArea.right)/2;const cy=(chartArea.top+chartArea.bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#76695A';ctx.font='600 10px Segoe UI';ctx.fillText('TOTAL',cx,cy-14);ctx.fillStyle='#1A1714';ctx.font='800 18px Segoe UI';const lbl=tot>=1e6?(tot/1e6).toFixed(1).replace('.',',')+' M':tot>=1e3?(tot/1e3).toFixed(0)+' K':tot.toLocaleString('pt-BR');ctx.fillText(lbl,cx,cy+6);ctx.restore();}};
-const pieOpts=()=>({responsive:true,maintainAspectRatio:false,cutout:'62%',layout:{padding:{top:6,bottom:8,left:6,right:6}},plugins:{legend:{position:'right',align:'center',labels:{font:{size:11,weight:'700'},color:'#1A1714',boxWidth:14,boxHeight:14,padding:8,usePointStyle:true,pointStyle:'circle',generateLabels:(c)=>{const ds=c.data.datasets[0];const tot=ds.data.reduce((s,x)=>s+x,0);const items=c.data.labels.map((l,i)=>{const v=ds.data[i];const pct=tot>0?(v/tot*100):0;return{text:` ${l}  ·  ${pct.toFixed(1).replace('.',',')}%`,fillStyle:ds.backgroundColor[i],strokeStyle:ds.backgroundColor[i],lineWidth:0,fontColor:'#1A1714',hidden:false,index:i,_v:v};});items.sort((a,b)=>b._v-a._v);return items;}}},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#28507E',borderWidth:1.5,padding:14,titleColor:'#1A1714',titleFont:{size:13,weight:'800'},bodyColor:'#76695A',bodyFont:{size:12,weight:'600'},displayColors:true,boxPadding:8,cornerRadius:10,caretSize:8,callbacks:{label:ctx=>{const v=ctx.parsed;const t=ctx.dataset.data.reduce((s,x)=>s+x,0);return `  ${v.toLocaleString('pt-BR',{maximumFractionDigits:0})}   (${(v/t*100).toFixed(2).replace('.',',')}%)`;}}}},animation:{animateRotate:true,animateScale:false,duration:1100,easing:'easeOutQuart'}});
-function getFamsForStock(stk){if(stk==='__ALL__')return FAMILIAS;return FAMILIAS_POR_ESTOQUE[stk]||[];}
-function getDepsForStock(stk){if(stk==='__ALL__')return DEPOSITOS.filter(d=>d.se>0||d.sw>0);return DEPOSITOS.filter(d=>d.grupo===stk&&(d.se>0||d.sw>0));}
-const chartFamPie=new Chart(document.getElementById('chartFamPie'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:'#F2F0EB',borderWidth:4,hoverOffset:18,hoverBorderColor:'#ffffff',hoverBorderWidth:3,spacing:2}]},options:pieOpts(),plugins:[pctOnSlicePlugin,centerTotalPlugin]});
-const chartFamAcc=new Chart(document.getElementById('chartFamAcc'),{type:'bar',data:{labels:[],datasets:[{label:'Acuracidade',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5,borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#28507E',borderWidth:1.5,padding:12,titleColor:'#1A1714',titleFont:{size:12,weight:'800'},bodyColor:'#76695A',bodyFont:{size:11},cornerRadius:8,callbacks:{title:ctx=>ctx[0].label,label:ctx=>{const v=ctx.parsed.x;const lbl=v>=95?'✅ ÓTIMA':v>=80?'✔ BOA':v>=60?'⚠ REGULAR':v>=40?'🔶 RUIM':'🔴 CRÍTICA';return '  Acuracidade: '+v.toFixed(1).replace('.',',')+'%  '+lbl;}}}},scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'#E2DCCB99'}},y:{ticks:{font:{size:11,weight:'600'}},grid:{color:'#E2DCCB66'}}}}});
-const chartDepPie=new Chart(document.getElementById('chartDepPie'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:'#F2F0EB',borderWidth:4,hoverOffset:18,hoverBorderColor:'#ffffff',hoverBorderWidth:3,spacing:2}]},options:pieOpts(),plugins:[pctOnSlicePlugin,centerTotalPlugin]});
-const chartDepSaldo=new Chart(document.getElementById('chartDepSaldo'),{type:'bar',data:{labels:[],datasets:[{label:'WMS (físico)',data:[],backgroundColor:'#1F8C4D88',borderColor:'#1F8C4D',borderWidth:1.5,borderRadius:4},{label:'ERP (sistêmico)',data:[],backgroundColor:'#28507E88',borderColor:'#28507E',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:14,font:{size:11,weight:'600'},usePointStyle:true,pointStyle:'rectRounded'}},tooltip:{backgroundColor:'rgba(247,244,237,0.98)',borderColor:'#28507E',borderWidth:1.5,padding:12,titleColor:'#1A1714',titleFont:{size:12,weight:'800'},bodyColor:'#76695A',bodyFont:{size:11},cornerRadius:8,callbacks:{label:ctx=>{const v=ctx.parsed.y;return '  '+ctx.dataset.label+': '+(v>=1e6?(v/1e6).toFixed(2).replace('.',',')+' M':v>=1e3?(v/1e3).toFixed(1).replace('.',',')+' K':v.toLocaleString('pt-BR'));},afterBody:ctx=>{if(ctx.length===2){const w=ctx[0].parsed.y,e=ctx[1].parsed.y,d=e-w,p=e>0?((e-Math.abs(d))/e*100):0;return['  ─────────────','  Δ: '+(d>0?'+':'')+(Math.abs(d)>=1e3?(d/1e3).toFixed(1)+'K':d.toFixed(0))+'   Acur.: '+p.toFixed(1).replace('.',',')+'%'];}return [];}}}},scales:{x:{ticks:{font:{size:10,weight:'600'}},grid:{color:'#E2DCCB66'}},y:{ticks:{callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v,font:{size:10}},grid:{color:'#E2DCCB99'}}}}});
 
+/* ── TABELA FAMÍLIAS ────────────────────────────────────────────────── */
+(function(){
+  var tb=document.getElementById('tbFamilias');var tsw=0,tse=0,tnw=0,tne=0;
+  FAMILIAS.forEach(function(f){
+    tsw+=f.saldoWMS;tse+=f.saldoERP;tnw+=f.skuWMS;tne+=f.skuERP;
+    var dSku=f.skuERP-f.skuWMS;
+    var pDsku=((Math.abs(dSku)/Math.max(f.skuWMS,f.skuERP,1))*100).toFixed(1).replace('.',',');
+    var dSaldo=f.saldoERP-f.saldoWMS;var col=accColor(f.acc);
+    var wPct=Math.min(100,Math.max(0,f.acc*100));
+    tb.innerHTML+='<tr><td><strong>'+f.fam+'</strong> <span style="color:var(--muted);font-size:10px">('+f.unit+')</span></td><td class="num">'+fmt(f.skuWMS)+'</td><td class="num">'+fmt(f.skuERP)+'</td>'
+      +'<td class="num" style="color:'+(dSku>0?'var(--green)':dSku<0?'var(--red)':'var(--muted)')+'">'+  (dSku>0?'+':'')+fmt(dSku)+'</td>'
+      +'<td class="num">'+pDsku+'%</td><td class="num">'+fmt(f.saldoWMS)+'</td><td class="num">'+fmt(f.saldoERP)+'</td>'
+      +'<td class="num" style="color:'+(dSaldo>0?'var(--green)':dSaldo<0?'var(--red)':'var(--muted)')+'">'+  (dSaldo>0?'+':'')+fmt(dSaldo)+'</td>'
+      +'<td class="num"><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:'+wPct+'%;background:'+col+'"></div></div>'
+      +'<span class="acc-cell" style="background:'+col+'22;color:'+col+';border:1px solid '+col+'44">'+fmtP(f.acc)+'</span></div></td></tr>';
+  });
+  var dT=tse-tsw;var dnSku=tne-tnw;
+  tb.innerHTML+='<tr style="background:var(--surface2);font-weight:700"><td>TOTAL</td><td class="num">'+fmt(tnw)+'</td><td class="num">'+fmt(tne)+'</td>'
+    +'<td class="num" style="color:'+(dnSku>0?'var(--green)':dnSku<0?'var(--red)':'var(--muted)')+'">'+  (dnSku>0?'+':'')+fmt(dnSku)+'</td>'
+    +'<td class="num">—</td><td class="num">'+fmt(tsw)+'</td><td class="num">'+fmt(tse)+'</td>'
+    +'<td class="num" style="color:'+(dT>0?'var(--green)':dT<0?'var(--red)':'var(--muted)')+'">'+  (dT>0?'+':'')+fmt(dT)+'</td><td class="num">—</td></tr>';
+})();
+
+/* ── ACCORDION DEPÓSITOS ────────────────────────────────────────────── */
+(function(){
+  var container=document.getElementById('depAccordion');
+  /* group deposits by stock group preserving order */
+  var groups={};
+  var groupOrder=[];
+  DEPOSITOS.forEach(function(d){
+    if(!groups[d.grupo]){groups[d.grupo]=[];groupOrder.push(d.grupo);}
+    groups[d.grupo].push(d);
+  });
+  groupOrder.forEach(function(grpName,gi){
+    var deps=groups[grpName];
+    /* calc group totals */
+    var gSw=0,gSe=0;
+    deps.forEach(function(d){gSw+=d.sw;gSe+=d.se;});
+    var gDif=gSe-gSw;
+    var gAcc=gSe>0?Math.max(0,(gSe-Math.abs(gDif))/gSe):0;
+    var gCol=accColor(gAcc);
+    var isOpen=gi===0; /* first group open by default */
+
+    var groupEl=document.createElement('div');
+    groupEl.className='dep-group';
+
+    /* header */
+    var hdr=document.createElement('div');
+    hdr.className='dep-hdr'+(isOpen?' open':'');
+    hdr.innerHTML='<div class="dep-hdr-icon">+</div>'
+      +'<div class="dep-grp-name">'+grpName+'</div>'
+      +'<div class="dep-grp-stats">'
+        +'<div class="dep-grp-stat"><span class="dep-grp-stat-lbl">WMS</span><span class="dep-grp-stat-val" style="color:#1e7d3a">'+fmt(gSw)+'</span></div>'
+        +'<div class="dep-grp-stat"><span class="dep-grp-stat-lbl">ERP</span><span class="dep-grp-stat-val" style="color:#1a5fa8">'+fmt(gSe)+'</span></div>'
+        +'<div class="dep-grp-stat"><span class="dep-grp-stat-lbl">Acuracidade</span><span class="dep-grp-acc" style="color:'+gCol+'">'+fmtP(gAcc)+'</span></div>'
+      +'</div>';
+
+    /* body */
+    var body=document.createElement('div');
+    body.className='dep-body'+(isOpen?' open':'');
+
+    var tblHTML='<table><thead><tr>'
+      +'<th>Depósito</th><th class="num">SKUs comp.</th><th class="num">Sem Dif.</th>'
+      +'<th class="num">Acur. SKU</th><th class="num">Saldo WMS</th><th class="num">Saldo ERP</th>'
+      +'<th class="num">Δ Saldo</th><th class="num" style="min-width:160px">Acuracidade qtde</th>'
+      +'<th>Criticidade</th>'
+      +'</tr></thead><tbody>';
+    deps.forEach(function(d){
+      var col=accColor(d.acc_q);var wPct=Math.min(100,Math.max(0,d.acc_q*100));
+      tblHTML+='<tr>'
+        +'<td><span class="dep-mini-tag">'+d.dep+'</span> <span style="color:var(--muted);font-size:11px">'+d.nome+'</span></td>'
+        +'<td class="num">'+fmt(d.comp)+'</td>'
+        +'<td class="num">'+fmt(d.sd)+'</td>'
+        +'<td class="num">'+fmtP(d.acc_sku)+'</td>'
+        +'<td class="num">'+fmt(d.sw)+'</td>'
+        +'<td class="num">'+fmt(d.se)+'</td>'
+        +'<td class="num" style="color:'+(d.dif>0?'var(--green)':d.dif<0?'var(--red)':'var(--muted)')+'">'+  (d.dif>0?'+':'')+fmt(d.dif)+'</td>'
+        +'<td class="num"><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:'+wPct+'%;background:'+col+'"></div></div>'
+        +'<span class="acc-cell" style="background:'+col+'22;color:'+col+';border:1px solid '+col+'44">'+fmtP(d.acc_q)+'</span></div></td>'
+        +'<td><span class="crit '+critCls(d.crit)+'">'+critLabel(d.crit)+'</span></td>'
+        +'</tr>';
+    });
+    tblHTML+='</tbody></table>';
+    body.innerHTML=tblHTML;
+
+    /* toggle */
+    hdr.addEventListener('click',function(){
+      var wasOpen=body.classList.contains('open');
+      body.classList.toggle('open');
+      hdr.classList.toggle('open');
+    });
+
+    groupEl.appendChild(hdr);
+    groupEl.appendChild(body);
+    container.appendChild(groupEl);
+  });
+})();
+
+/* ── CHART.JS CONFIG ────────────────────────────────────────────────── */
+Chart.defaults.color='#4a3018';
+Chart.defaults.borderColor='#d9c9a8';
+Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
+
+/* 20 visually distinct colors for pie/donut charts */
+const PIE_COLORS=[
+  '#b55f1a','#1e7d3a','#1a5fa8','#8b3e00','#0e7a62',
+  '#c0392b','#5a8f1e','#6b3fa0','#1a7a8a','#8b6914',
+  '#2d6e9e','#a0391a','#3d8b4e','#7a2d8b','#1a5e3a',
+  '#c4580a','#4a6fa8','#8b1a4a','#3a7a5e','#9e6b14'
+];
+
+const pctOnSlicePlugin={id:'pctOnSlice',afterDatasetsDraw:function(c){
+  var ctx=c.ctx;
+  c.data.datasets.forEach(function(ds,i){
+    var meta=c.getDatasetMeta(i);
+    var tot=ds.data.reduce(function(s,x){return s+x;},0);
+    meta.data.forEach(function(arc,idx){
+      var v=ds.data[idx];if(!v||v/tot<0.035)return;
+      var pos=arc.tooltipPosition();
+      var pct=(v/tot*100).toFixed(1).replace('.',',');
+      ctx.save();ctx.font='800 12px Segoe UI';ctx.fillStyle='#ffffff';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.shadowColor='rgba(0,0,0,0.85)';ctx.shadowBlur=5;
+      ctx.fillText(pct+'%',pos.x,pos.y);ctx.restore();
+    });
+  });
+}};
+
+const centerTotalPlugin={id:'centerTotal',afterDatasetsDraw:function(c){
+  var ds=c.data.datasets[0];if(!ds||!ds.data)return;
+  var tot=ds.data.reduce(function(s,x){return s+x;},0);if(!tot)return;
+  var ca=c.chartArea;if(!ca)return;
+  var cx2=(ca.left+ca.right)/2;var cy2=(ca.top+ca.bottom)/2;
+  var ctx=c.ctx;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#8a7055';ctx.font='600 10px Segoe UI';ctx.fillText('TOTAL',cx2,cy2-14);
+  ctx.fillStyle='#2a1a08';ctx.font='800 18px Segoe UI';
+  var lbl=tot>=1e6?(tot/1e6).toFixed(1).replace('.',',')+' M':tot>=1e3?(tot/1e3).toFixed(0)+' K':tot.toLocaleString('pt-BR');
+  ctx.fillText(lbl,cx2,cy2+6);ctx.restore();
+}};
+
+function pieOpts(){
+  return {
+    responsive:true,maintainAspectRatio:false,cutout:'62%',
+    layout:{padding:{top:6,bottom:8,left:6,right:6}},
+    plugins:{
+      legend:{
+        position:'right',align:'center',
+        labels:{
+          font:{size:11,weight:'700'},color:'#2a1a08',
+          boxWidth:14,boxHeight:14,padding:8,
+          usePointStyle:true,pointStyle:'circle',
+          generateLabels:function(c){
+            var ds=c.data.datasets[0];
+            var tot=ds.data.reduce(function(s,x){return s+x;},0);
+            var items=c.data.labels.map(function(l,i){
+              var v=ds.data[i];
+              var pct=tot>0?(v/tot*100):0;
+              return{text:' '+l+'  ·  '+pct.toFixed(1).replace('.',',')+' %',
+                fillStyle:ds.backgroundColor[i],strokeStyle:ds.backgroundColor[i],
+                lineWidth:0,fontColor:'#2a1a08',hidden:false,index:i,_v:v};
+            });
+            items.sort(function(a,b){return b._v-a._v;});
+            return items;
+          }
+        }
+      },
+      tooltip:{
+        backgroundColor:'rgba(42,26,8,0.95)',borderColor:'#b55f1a',borderWidth:1.5,
+        padding:14,titleColor:'#fdf0dc',titleFont:{size:13,weight:'800'},
+        bodyColor:'#e8d5b0',bodyFont:{size:12,weight:'600'},
+        displayColors:true,boxPadding:8,cornerRadius:10,caretSize:8,
+        callbacks:{
+          label:function(ctx2){
+            var v=ctx2.parsed;
+            var t=ctx2.dataset.data.reduce(function(s,x){return s+x;},0);
+            var pct=((v/t)*100).toFixed(2).replace('.',',');
+            var vFmt=v>=1e6?(v/1e6).toFixed(2).replace('.',',')+' M':v.toLocaleString('pt-BR',{maximumFractionDigits:0});
+            return '  '+vFmt+'   ('+pct+' % do total)';
+          },
+          afterLabel:function(ctx2){
+            var ds=ctx2.dataset;
+            var total=ds.data.reduce(function(s,x){return s+x;},0);
+            return '  Total do grupo: '+total.toLocaleString('pt-BR',{maximumFractionDigits:0});
+          }
+        }
+      }
+    },
+    animation:{animateRotate:true,animateScale:false,duration:1100,easing:'easeOutQuart'}
+  };
+}
+
+function getFamsForStock(stk){if(stk==='__ALL__')return FAMILIAS;return FAMILIAS_POR_ESTOQUE[stk]||[];}
+function getDepsForStock(stk){
+  if(stk==='__ALL__')return DEPOSITOS.filter(function(d){return d.se>0||d.sw>0;});
+  return DEPOSITOS.filter(function(d){return d.grupo===stk&&(d.se>0||d.sw>0);});
+}
+
+/* ── CHARTS INIT ──────────────────────────────────────────────────── */
+var chartFamPie=new Chart(document.getElementById('chartFamPie'),{
+  type:'doughnut',
+  data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:'#fdf7ee',borderWidth:4,hoverOffset:18,hoverBorderColor:'#2a1a08',hoverBorderWidth:3,spacing:2}]},
+  options:pieOpts(),
+  plugins:[pctOnSlicePlugin,centerTotalPlugin]
+});
+
+var chartFamAcc=new Chart(document.getElementById('chartFamAcc'),{
+  type:'bar',
+  data:{labels:[],datasets:[{label:'Acuracidade',data:[],backgroundColor:[],borderColor:[],borderWidth:1.5}]},
+  options:{
+    responsive:true,maintainAspectRatio:false,indexAxis:'y',
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'rgba(42,26,8,0.95)',borderColor:'#b55f1a',borderWidth:1.5,
+        padding:12,titleColor:'#fdf0dc',bodyColor:'#e8d5b0',cornerRadius:8,
+        callbacks:{
+          title:function(items){return items[0].label;},
+          label:function(ctx2){
+            var v=ctx2.parsed.x;
+            return '  Acuracidade: '+v.toFixed(1).replace('.',',')+' %';
+          },
+          afterLabel:function(ctx2){
+            var idx=ctx2.dataIndex;
+            var fams=getFamsForStock(CURRENT_STOCK).filter(function(f){return f.saldoERP>0||f.saldoWMS>0;});
+            if(fams[idx]){
+              var f=fams[idx];
+              return ['  ERP: '+fmt(f.saldoERP)+'  |  WMS: '+fmt(f.saldoWMS),'  Δ: '+fmt(f.saldoERP-f.saldoWMS)];
+            }
+            return '';
+          }
+        }
+      }
+    },
+    scales:{
+      x:{min:0,max:100,ticks:{callback:function(v){return v+'%';},font:{size:10},color:'#8a7055'},grid:{color:'#d9c9a844'}},
+      y:{ticks:{font:{size:10},color:'#4a3018'},grid:{color:'#d9c9a844'}}
+    }
+  }
+});
+
+var chartDepPie=new Chart(document.getElementById('chartDepPie'),{
+  type:'doughnut',
+  data:{labels:[],datasets:[{data:[],backgroundColor:[],borderColor:'#fdf7ee',borderWidth:4,hoverOffset:18,hoverBorderColor:'#2a1a08',hoverBorderWidth:3,spacing:2}]},
+  options:pieOpts(),
+  plugins:[pctOnSlicePlugin,centerTotalPlugin]
+});
+
+var chartDepSaldo=new Chart(document.getElementById('chartDepSaldo'),{
+  type:'bar',
+  data:{
+    labels:[],
+    datasets:[
+      {label:'WMS',data:[],backgroundColor:'#1e7d3a55',borderColor:'#1e7d3a',borderWidth:1.5},
+      {label:'ERP',data:[],backgroundColor:'#1a5fa855',borderColor:'#1a5fa8',borderWidth:1.5}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'top',labels:{boxWidth:12,font:{size:11},color:'#4a3018'}},
+      tooltip:{
+        backgroundColor:'rgba(42,26,8,0.95)',borderColor:'#b55f1a',borderWidth:1.5,
+        padding:12,titleColor:'#fdf0dc',bodyColor:'#e8d5b0',cornerRadius:8,
+        mode:'index',intersect:false,
+        callbacks:{
+          label:function(ctx2){
+            var v=ctx2.parsed.y;
+            var vFmt=v>=1e6?(v/1e6).toFixed(2).replace('.',',')+' M':v.toLocaleString('pt-BR',{maximumFractionDigits:0});
+            return '  '+ctx2.dataset.label+': '+vFmt;
+          },
+          afterBody:function(items){
+            if(items.length<2)return '';
+            var wms=items[0].parsed.y||0,erp=items[1].parsed.y||0;
+            var dif=erp-wms;
+            var acc=erp>0?Math.max(0,(erp-Math.abs(dif))/erp)*100:0;
+            return ['','  Δ (ERP−WMS): '+(dif>=0?'+':'')+dif.toLocaleString('pt-BR',{maximumFractionDigits:0}),'  Acuracidade: '+acc.toFixed(1).replace('.',',')+' %'];
+          }
+        }
+      }
+    },
+    scales:{
+      x:{ticks:{font:{size:10},color:'#8a7055'},grid:{color:'#d9c9a844'}},
+      y:{ticks:{callback:function(v){return v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v;},font:{size:10},color:'#8a7055'},grid:{color:'#d9c9a844'}}
+    }
+  }
+});
+
+/* ── UPDATE CHARTS ON FILTER ──────────────────────────────────────── */
 function updateStockCharts(stk){
   CURRENT_STOCK=stk;
-  const lbl=STOCK_SHORT[stk]||stk;
-  const fams=getFamsForStock(stk);
-  const deps=getDepsForStock(stk).sort((a,b)=>b.se-a.se);
-  chartFamPie.data.labels=fams.map(f=>f.fam);
-  chartFamPie.data.datasets[0].data=fams.map(f=>f.saldoERP);
-  chartFamPie.data.datasets[0].backgroundColor=fams.map((_,i)=>PIE_COLORS[i%PIE_COLORS.length]);
+  var lbl=STOCK_SHORT[stk]||stk;
+  var fams=getFamsForStock(stk).filter(function(f){return f.saldoERP>0||f.saldoWMS>0;});
+  var deps=getDepsForStock(stk).sort(function(a,b){return b.se-a.se;});
+
+  /* assign colors ensuring unique per label */
+  var famColors=fams.map(function(f,i){return PIE_COLORS[i%PIE_COLORS.length];});
+  var depColors=deps.map(function(d,i){return PIE_COLORS[i%PIE_COLORS.length];});
+
+  chartFamPie.data.labels=fams.map(function(f){return f.fam;});
+  chartFamPie.data.datasets[0].data=fams.map(function(f){return f.saldoERP;});
+  chartFamPie.data.datasets[0].backgroundColor=famColors;
   chartFamPie.update();
-  chartFamAcc.data.labels=fams.map(f=>f.fam);
-  chartFamAcc.data.datasets[0].data=fams.map(f=>f.acc*100);
-  chartFamAcc.data.datasets[0].backgroundColor=fams.map(f=>accColor(f.acc)+'aa');
-  chartFamAcc.data.datasets[0].borderColor=fams.map(f=>accColor(f.acc));
+
+  chartFamAcc.data.labels=fams.map(function(f){return f.fam;});
+  chartFamAcc.data.datasets[0].data=fams.map(function(f){return f.acc*100;});
+  chartFamAcc.data.datasets[0].backgroundColor=fams.map(function(f){return accColor(f.acc)+'99';});
+  chartFamAcc.data.datasets[0].borderColor=fams.map(function(f){return accColor(f.acc);});
   chartFamAcc.update();
-  chartDepPie.data.labels=deps.map(d=>d.dep+' · '+(d.nome||''));
-  chartDepPie.data.datasets[0].data=deps.map(d=>d.se);
-  chartDepPie.data.datasets[0].backgroundColor=deps.map((_,i)=>PIE_COLORS[i%PIE_COLORS.length]);
+
+  chartDepPie.data.labels=deps.map(function(d){return d.dep+' · '+d.nome;});
+  chartDepPie.data.datasets[0].data=deps.map(function(d){return d.se;});
+  chartDepPie.data.datasets[0].backgroundColor=depColors;
   chartDepPie.update();
-  const depsTop=deps.slice(0,7);
-  chartDepSaldo.data.labels=depsTop.map(d=>d.dep);
-  chartDepSaldo.data.datasets[0].data=depsTop.map(d=>d.sw);
-  chartDepSaldo.data.datasets[1].data=depsTop.map(d=>d.se);
+
+  var depsTop=deps.slice(0,8);
+  chartDepSaldo.data.labels=depsTop.map(function(d){return d.dep;});
+  chartDepSaldo.data.datasets[0].data=depsTop.map(function(d){return d.sw;});
+  chartDepSaldo.data.datasets[1].data=depsTop.map(function(d){return d.se;});
   chartDepSaldo.update();
+
   document.getElementById('hdrFamPie').textContent='Saldo por Família (ERP) · '+lbl;
   document.getElementById('hdrFamAcc').textContent='Acuracidade por Família (%) · '+lbl;
   document.getElementById('hdrDepPie').textContent='Saldo por Depósito (ERP) · '+lbl;
   document.getElementById('hdrDepSaldo').textContent='Saldo WMS × ERP — Depósitos · '+lbl;
 }
-document.querySelectorAll('#stockFilter .stock-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('#stockFilter .stock-btn').forEach(x=>x.classList.remove('active'));
+
+document.querySelectorAll('#stockFilter .stock-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#stockFilter .stock-btn').forEach(function(x){x.classList.remove('active');});
     b.classList.add('active');
     updateStockCharts(b.dataset.stock);
   });
