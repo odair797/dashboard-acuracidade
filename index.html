@@ -114,6 +114,10 @@ tr:hover td{background:#E2DCCB66}
     <div class="saldo-card"><div class="saldo-label">Saldo ERP (sistêmico)</div><div class="saldo-val erp">26.562.955</div></div>
     <div class="saldo-card"><div class="saldo-label">Diferença Absoluta</div><div class="saldo-val dif">13.348.180</div></div>
   </div>
+  <div class="card">
+    <div class="card-title">Detalhamento por Depósito</div>
+    <table><tbody id="tbDepositos"></tbody></table>
+  </div>
   <div class="stock-filter" id="stockFilter">
     <span class="lbl">Filtrar gráficos por estoque:</span>
     <button class="stock-btn active" data-stock="Estoque de Viana G9"><span class="dot"></span>Viana G9</button>
@@ -122,12 +126,8 @@ tr:hover td{background:#E2DCCB66}
     <button class="stock-btn" data-stock="__ALL__"><span class="dot"></span>Todos os Estoques</button>
   </div>
 
-  <div class="charts-row">
-    <div class="chart-card pie-card"><h3 id="hdrFamPie">Saldo por Família (ERP) · Viana G9</h3><div class="canvas-wrap"><canvas id="chartFamPie"></canvas></div></div>
-    <div class="chart-card"><h3 id="hdrFamAcc">Acuracidade por Família (%) · Viana G9</h3><div class="canvas-wrap"><canvas id="chartFamAcc"></canvas></div></div>
-  </div>
   <div class="card">
-    <div class="card-title">Detalhamento por Família (tipo código — 1º dígito do SKU)</div>
+    <div class="card-title" id="hdrFamTable">Detalhamento por Família (tipo código — 1º dígito do SKU) · Viana G9</div>
     <table><thead><tr>
       <th>Família</th><th class="num">SKU WMS</th><th class="num">SKU ERP</th>
       <th class="num">Δ SKU</th><th class="num">% Δ SKU</th>
@@ -136,16 +136,12 @@ tr:hover td{background:#E2DCCB66}
     </tr></thead><tbody id="tbFamilias"></tbody></table>
   </div>
   <div class="charts-row">
+    <div class="chart-card pie-card"><h3 id="hdrFamPie">Saldo por Família (ERP) · Viana G9</h3><div class="canvas-wrap"><canvas id="chartFamPie"></canvas></div></div>
+    <div class="chart-card"><h3 id="hdrFamAcc">Acuracidade por Família (%) · Viana G9</h3><div class="canvas-wrap"><canvas id="chartFamAcc"></canvas></div></div>
+  </div>
+  <div class="charts-row">
     <div class="chart-card pie-card"><h3 id="hdrDepPie">Saldo por Depósito (ERP) · Viana G9</h3><div class="canvas-wrap"><canvas id="chartDepPie"></canvas></div></div>
     <div class="chart-card"><h3 id="hdrDepSaldo">Saldo WMS × ERP — Depósitos · Viana G9</h3><div class="canvas-wrap"><canvas id="chartDepSaldo"></canvas></div></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Detalhamento por Depósito</div>
-    <table><tbody id="tbDepositos"></tbody></table>
-  </div>
-  <div class="card">
-    <div class="card-title">Legenda de Depósitos</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px" id="legendaDep"></div>
   </div>
   <div class="alert-nota">⚠️ <strong>Nota metodológica:</strong> Matéria-Prima em KG nativos · demais famílias em UN. Acuracidade = (Saldo ERP – |ERP − WMS|) / Saldo ERP, truncada em 0%.</div>
 </main>
@@ -182,9 +178,9 @@ const critCls=c=>'c-'+c.toLowerCase();
   if(p>=.90){label='ÓTIMA';cls='zone-otima';}else if(p>=.75){label='BOA';cls='zone-boa';}else if(p>=.50){label='REGULAR';cls='zone-regular';}else if(p>=.30){label='RUIM';cls='zone-ruim';}
   badge.textContent=label;badge.className='gauge-badge '+cls;
 })();
-(function(){
-  const tb=document.getElementById('tbFamilias');let tsw=0,tse=0,tnw=0,tne=0;
-  FAMILIAS.forEach(f=>{
+function renderFamiliasTable(fams){
+  const tb=document.getElementById('tbFamilias');tb.innerHTML='';let tsw=0,tse=0,tnw=0,tne=0;
+  fams.forEach(f=>{
     tsw+=f.saldoWMS;tse+=f.saldoERP;tnw+=f.skuWMS;tne+=f.skuERP;
     const dSku=f.skuERP-f.skuWMS;
     const pDsku=((Math.abs(dSku)/Math.max(f.skuWMS,f.skuERP,1))*100).toFixed(1).replace('.',',');
@@ -194,7 +190,7 @@ const critCls=c=>'c-'+c.toLowerCase();
   });
   const dT=tse-tsw;const dnSku=tne-tnw;
   tb.innerHTML+=`<tr style="background:var(--surface2);font-weight:700"><td>TOTAL</td><td class="num">${fmt(tnw)}</td><td class="num">${fmt(tne)}</td><td class="num" style="color:${dnSku>0?'var(--green)':dnSku<0?'var(--red)':'var(--muted)'}">${dnSku>0?'+':''}${fmt(dnSku)}</td><td class="num">—</td><td class="num">${fmt(tsw)}</td><td class="num">${fmt(tse)}</td><td class="num" style="color:${dT>0?'var(--green)':dT<0?'var(--red)':'var(--muted)'}">${dT>0?'+':''}${fmt(dT)}</td><td class="num">—</td></tr>`;
-})();
+}
 (function(){
   const tb=document.getElementById('tbDepositos');
   const order=[];const groups={};
@@ -225,10 +221,6 @@ window.toggleDepGroup=function(gi){
   tgl.textContent=open?'−':'+';
   tgl.classList.toggle('open',open);
 };
-(function(){
-  const el=document.getElementById('legendaDep');
-  Object.entries(DEP_NAMES).forEach(([k,v])=>{el.innerHTML+=`<span style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text)"><strong style="color:var(--accent)">${k}</strong> — ${v}</span>`;});
-})();
 Chart.defaults.color='#1A1714';Chart.defaults.borderColor='#E2DCCB';
 Chart.defaults.font.family="'Segoe UI',system-ui,sans-serif";
 // Paleta de 14 cores vibrantes e harmonicas
@@ -249,6 +241,7 @@ function updateStockCharts(stk){
   CURRENT_STOCK=stk;
   const lbl=STOCK_SHORT[stk]||stk;
   const fams=getFamsForStock(stk);
+  renderFamiliasTable(fams);
   const deps=getDepsForStock(stk).sort((a,b)=>b.se-a.se);
   // chartFamPie
   chartFamPie.data.labels=fams.map(f=>f.fam);
@@ -273,6 +266,7 @@ function updateStockCharts(stk){
   chartDepSaldo.data.datasets[1].data=depsTop.map(d=>d.se);
   chartDepSaldo.update();
   // titulos
+  document.getElementById('hdrFamTable').textContent=`Detalhamento por Família (tipo código — 1º dígito do SKU) · ${lbl}`;
   document.getElementById('hdrFamPie').textContent=`Saldo por Família (ERP) · ${lbl}`;
   document.getElementById('hdrFamAcc').textContent=`Acuracidade por Família (%) · ${lbl}`;
   document.getElementById('hdrDepPie').textContent=`Saldo por Depósito (ERP) · ${lbl}`;
@@ -289,4 +283,4 @@ document.querySelectorAll('#stockFilter .stock-btn').forEach(b=>{
 updateStockCharts(CURRENT_STOCK);
 </script>
 </body>
-</html>
+</html>                                                                                                                                                                                                                                                                                                  

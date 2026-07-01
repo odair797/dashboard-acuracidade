@@ -66,7 +66,7 @@ tr:hover td{background:#E2DCCB66}
 </head>
 <body>
 <header>
-  <a href="index.html" class="btn-back">← Dashboard</a>
+  <a href="dashboard_acuracidade.html" class="btn-back">← Dashboard</a>
   <div class="logo-senior">Senior</div>
   <div class="logo-ybera">YBERA GROUP</div>
   <div class="header-title">Análise Detalhada por SKU</div>
@@ -183,5 +183,3 @@ document.querySelectorAll('.crit-panel[data-filter]').forEach(el=>{el.addEventLi
 document.getElementById('export').onclick=()=>{const data=filtered();const head=['SKU','Descricao','Familia','Deposito','Lote','Qtde ERP','Qtde WMS','Diferenca','% Dif','Acuracidade','Criticidade'];const rows=data.map(r=>[r.sku,r.descricao,r.familia,r.deposito,r.lote,r.qtde_erp,r.qtde_wms,r.diferenca,(r.perc_dif*100).toFixed(2),(r.acuracidade*100).toFixed(2),r.criticidade]);const csv=[head.join(';')].concat(rows.map(r=>r.map(c=>`"${(c+'').replace(/"/g,'""')}"`).join(';'))).join('\n');const blob=new Blob(['﻿'+csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='divergencias_erp_wms.csv';a.click();};
 render();
 </script>
-</body>
-</html>
