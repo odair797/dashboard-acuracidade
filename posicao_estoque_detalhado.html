@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Posição de Estoque Detalhado · GYP/YBERA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root { --bg:#F2F0EB;--surface:#FFFFFF;--surface2:#F7F4ED;--surface3:#EEEBe4;--border:#E2DCCB;--text:#1A1714;--muted:#76695A;--accent:#28507E;--red:#B43A2E;--orange:#C77520;--yellow:#9F7E2C;--lime:#1F8C4D;--green:#1F8C4D;--senior:#0C7A6F; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html { overflow-y:scroll; scrollbar-gutter:stable; }
+body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; }
+header { background:var(--surface); border-bottom:1px solid var(--border); padding:10px 24px; display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:50; }
+
+  .logo-senior { font-size:27px; font-weight:800; color:var(--senior); letter-spacing:-1px; }
+  .logo-ybera { font-size:18px; font-weight:800; color:var(--muted); border-left:1px solid var(--border); padding-left:16px; letter-spacing:-.5px; }
+  .logo-ybera sup { font-size:10px; font-weight:700; }
+  .header-title { flex:1; text-align:center; }
+  .header-title h1 { font-size:21px; font-weight:800; }
+  .header-title p { font-size:13px; color:var(--muted); margin-top:3px; }
+  .header-ts { font-size:10px; color:var(--muted); text-align:right; line-height:1.5; border-left:1px solid var(--border); padding-left:14px; }
+  .header-ts strong { display:block; font-size:11px; color:var(--text); font-weight:600; }
+  .app-shell { display:flex; align-items:flex-start; gap:20px; max-width:1600px; margin:0 auto; padding:20px 24px; }
+  .sidebar { width:170px; flex:0 0 170px; display:flex; flex-direction:column; gap:6px; position:sticky; top:20px; }
+  .sidebar-item { display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:7px 9px; text-decoration:none; color:var(--text); font-size:10.5px; font-weight:700; line-height:1.25; transition:all .15s ease; }
+  .sidebar-item:hover { border-color:var(--accent); transform:translateX(2px); }
+  .sidebar-item .ico { font-size:12px; line-height:1; }
+  .sidebar-item .lbl { flex:1; }
+  .sidebar-item.active { background:linear-gradient(135deg,var(--accent),#6A4990); color:#fff; border-color:var(--accent); box-shadow:0 4px 14px #28507E55; }
+  .sidebar-sub { display:flex; align-items:center; gap:6px; padding:5px 9px 5px 24px; text-decoration:none; color:var(--muted); font-size:9.5px; font-weight:600; border-left:2px solid var(--border); margin-left:8px; }
+  .sidebar-sub:hover { color:var(--accent); border-left-color:var(--accent); }
+  .sidebar-sub.active { color:var(--accent); border-left-color:var(--accent); }
+
+main { padding:0; flex:1; min-width:0; display:flex; flex-direction:column; gap:20px; }
+.filial-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
+.sys-card-titulo { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+.sys-card-row { display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; border-bottom:1px dashed var(--border); font-size:13px; }
+.sys-card-row:last-of-type { border-bottom:none; }
+.sys-card-label small { color:var(--muted); font-size:11px; }
+.sys-card-valor { font-weight:700; color:var(--text); }
+.sys-card-row-dif .sys-card-label { font-weight:700; }
+.dif-ok { color:var(--green); }
+.dif-bad { color:var(--red); }
+.dif-muted { color:var(--muted); }
+.sys-card-nota { font-size:11px; color:var(--orange); margin-top:8px; }
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+table.tbl-dep { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.tbl-dep th { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; background:var(--surface2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+table.tbl-dep th.num { text-align:right; }
+table.tbl-dep td { padding:6px 10px; border-bottom:1px solid var(--border); }
+table.tbl-dep td.num { text-align:right; }
+table.tbl-hist { table-layout:fixed; }
+table.tbl-hist col.col-dia { width:28%; }
+table.tbl-hist col.col-valor { width:44%; }
+table.tbl-hist col.col-hora { width:28%; }
+h3 { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+.pendente-txt { color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-senior">Senior</div>
+  <div class="logo-ybera">YBERAGROUP<sup>®</sup></div>
+  <div class="header-title">
+    <h1>Posição de Estoque Detalhado</h1>
+    <p>Cruzamento ERP × WMS por filial e depósito · GYP / YBERA</p>
+  </div>
+  <div class="header-ts">Última atualização<strong>13/07/2026 11:17</strong></div>
+</header>
+<div class="app-shell">
+<aside class="sidebar">
+    <a class="sidebar-item" href="dashboard_acuracidade.html"><span class="ico">📊</span><span class="lbl">Acuracidade entre Sistemas</span></a>
+    <a class="sidebar-item" href="analise_skus.html"><span class="ico">🔎</span><span class="lbl">Análise Detalhada por SKU</span></a>
+    <a class="sidebar-item" href="posicao_estoque.html"><span class="ico">📦</span><span class="lbl">Posição de Estoque</span></a>
+    <a class="sidebar-sub active" href="posicao_estoque_detalhado.html"><span class="lbl">Posição de Estoque Detalhado</span></a>
+  </aside>
+<main>
+  <div class="filial-row">
+    
+    <div class="card sys-card">
+      <div class="sys-card-titulo">YBERAGROUP® FILIAL 1 · ERP × WMS</div>
+      <div class="sys-card-row">
+        <span class="sys-card-label">Posição de Estoque ERP</span>
+        <span class="sys-card-valor">R$ 10.119.937,01</span>
+      </div>
+      <div class="sys-card-row">
+        <span class="sys-card-label">Posição de Estoque WMS <small>(qtd. WMS × preço médio ERP)</small></span>
+        <span class="sys-card-valor">R$ 5.058.882,38</span>
+      </div>
+      <div class="sys-card-row sys-card-row-dif">
+        <span class="sys-card-label">Diferença (ERP − WMS)</span>
+        <span class="sys-card-valor"><span class="dif-bad">R$ 5.061.054,63</span></span>
+      </div>
+      <div class="sys-card-nota">⚠ 1 linha(s) WMS sem preço médio ERP correspondente (não somadas)</div>
+    </div>
+    
+    <div class="card sys-card">
+      <div class="sys-card-titulo">YBERAGROUP® FILIAL 3 · ERP × WMS</div>
+      <div class="sys-card-row">
+        <span class="sys-card-label">Posição de Estoque ERP</span>
+        <span class="sys-card-valor">R$ 3.725.996,78</span>
+      </div>
+      <div class="sys-card-row">
+        <span class="sys-card-label">Posição de Estoque WMS <small>(qtd. WMS × preço médio ERP)</small></span>
+        <span class="sys-card-valor">R$ 3.397.697,06</span>
+      </div>
+      <div class="sys-card-row sys-card-row-dif">
+        <span class="sys-card-label">Diferença (ERP − WMS)</span>
+        <span class="sys-card-valor"><span class="dif-bad">R$ 328.299,72</span></span>
+      </div>
+      <div class="sys-card-nota">⚠ 38 linha(s) WMS sem preço médio ERP correspondente (não somadas)</div><div class="sys-card-nota">ℹ Posição ERP = Qtd. × Preço Médio (linhas do depósito 3100). Posição WMS = qtd. WMS nos depósitos de integração (1100,1101,1102,1103,1010) × esse mesmo preço médio</div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    
+    <div class="card">
+      <h3>Detalhamento por Depósito · Filial 1 (ERP × WMS)</h3>
+      <table class="tbl-dep">
+        <thead>
+          <tr><th>Depósito</th><th>Descrição</th><th class="num">Saldo ERP</th><th class="num">Saldo WMS</th><th class="num">Diferença</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>1100</td>
+          <td>DEP. VIANA G9</td>
+          <td class="num">R$ 4.109.057,62</td>
+          <td class="num">R$ 4.029.005,18</td>
+          <td class="num"><span class="dif-bad">R$ 80.052,44</span></td>
+        </tr>
+        <tr>
+          <td>1-150</td>
+          <td>FABRICA</td>
+          <td class="num">R$ 2.484.481,42</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 2.484.481,42</span></td>
+        </tr>
+        <tr>
+          <td>1-200</td>
+          <td>1-200</td>
+          <td class="num">R$ 2.194.484,80</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 2.194.484,80</span></td>
+        </tr>
+        <tr>
+          <td>1200</td>
+          <td>DEP. GUARAPARI G1 (Matriz - integra WMS)</td>
+          <td class="num">R$ 820.648,30</td>
+          <td class="num">R$ 1.013.851,48</td>
+          <td class="num"><span class="dif-bad">R$ -193.203,18</span></td>
+        </tr>
+        <tr>
+          <td>1-900</td>
+          <td>DEPÓSITO BACKUP WMS</td>
+          <td class="num">R$ 304.233,15</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 304.233,15</span></td>
+        </tr>
+        <tr>
+          <td>1-500</td>
+          <td>EM TERCEIRO</td>
+          <td class="num">R$ 87.286,26</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 87.286,26</span></td>
+        </tr>
+        <tr>
+          <td>1-100</td>
+          <td>DEP. VIANA G3</td>
+          <td class="num">R$ 32.815,06</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 32.815,06</span></td>
+        </tr>
+        <tr>
+          <td>1-300</td>
+          <td>Expedicao</td>
+          <td class="num">R$ 32.154,21</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 32.154,21</span></td>
+        </tr>
+        <tr>
+          <td>1010</td>
+          <td>DEP. Retencao G9</td>
+          <td class="num">R$ 18.386,54</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 18.386,54</span></td>
+        </tr>
+        <tr>
+          <td>3-160</td>
+          <td>DEP. QUARENTENA G3</td>
+          <td class="num">R$ 9.822,22</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 9.822,22</span></td>
+        </tr>
+        <tr>
+          <td>1102</td>
+          <td>DEP. Vencidos G9</td>
+          <td class="num">R$ 9.396,78</td>
+          <td class="num">R$ 9.396,78</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>1-400</td>
+          <td>QUARENTENA (antigo - p/ 1000)</td>
+          <td class="num">R$ 8.951,67</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 8.951,67</span></td>
+        </tr>
+        <tr>
+          <td>1101</td>
+          <td>DEP. Avaria/Bloqueado G9</td>
+          <td class="num">R$ 3.539,98</td>
+          <td class="num">R$ 3.539,98</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>1000</td>
+          <td>INSPEÇÃO (QUARENTENA)</td>
+          <td class="num">R$ 2.664,58</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 2.664,58</span></td>
+        </tr>
+        <tr>
+          <td>1203</td>
+          <td>DEP. Perdas/Inventario G1</td>
+          <td class="num">R$ 2.010,59</td>
+          <td class="num">R$ 1.919,11</td>
+          <td class="num"><span class="dif-bad">R$ 91,48</span></td>
+        </tr>
+        <tr>
+          <td>1-700</td>
+          <td>DEP. RETENCAO G3</td>
+          <td class="num">R$ 3,83</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-bad">R$ 3,83</span></td>
+        </tr>
+        <tr>
+          <td>1103</td>
+          <td>DEP. Perdas/Inventario G9</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>3-700</td>
+          <td>DEP. INVENTARIO AJUSTE G3</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>1-600</td>
+          <td>PRODUTOS REPROVADOS (antigo - p/ 1020)</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>GYP - PACKING</td>
+          <td>GYP - PACKING</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 1.169,84</td>
+          <td class="num"><span class="dif-bad">R$ -1.169,84</span></td>
+        </tr>
+        <tr>
+          <td>1202</td>
+          <td>1202</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>3-150</td>
+          <td>DEP. Avaria/Bloqueado G3</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>1201</td>
+          <td>1201</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>3-180</td>
+          <td>DEP. PRODUTOS REPROVADOS G3</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num">R$ 0,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr></tbody>
+      </table>
+    </div>
+    
+    <div class="card">
+      <h3>Detalhamento por Depósito · Filial 3 (Estoque de Viana G9)</h3>
+      <table class="tbl-dep">
+        <thead>
+          <tr><th>Depósito</th><th>Descrição</th><th class="num">Saldo ERP</th><th class="num">Saldo WMS</th><th class="num">Diferença</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>3100</td>
+          <td>DEP. Fiscal Viana G9</td>
+          <td class="num">R$ 13.724.313,34</td>
+          <td class="num">R$ 13.086.370,48</td>
+          <td class="num"><span class="dif-bad">R$ 637.942,86</span></td>
+        </tr>
+        <tr>
+          <td>1100</td>
+          <td>DEP. VIANA G9</td>
+          <td class="num">R$ 12.912.890,88</td>
+          <td class="num">R$ 12.948.546,48</td>
+          <td class="num"><span class="dif-bad">R$ -35.655,60</span></td>
+        </tr>
+        <tr>
+          <td>1101</td>
+          <td>DEP. Avaria/Bloqueado G9</td>
+          <td class="num">R$ 72.293,00</td>
+          <td class="num">R$ 72.396,00</td>
+          <td class="num"><span class="dif-bad">R$ -103,00</span></td>
+        </tr>
+        <tr>
+          <td>1102</td>
+          <td>DEP. Vencidos G9</td>
+          <td class="num">R$ 55.017,00</td>
+          <td class="num">R$ 55.017,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>1103</td>
+          <td>DEP. Perdas/Inventario G9</td>
+          <td class="num">R$ 10.411,00</td>
+          <td class="num">R$ 10.411,00</td>
+          <td class="num"><span class="dif-ok">R$ 0,00</span></td>
+        </tr>
+        <tr>
+          <td>1010</td>
+          <td>DEP. Retencao G9</td>
+          <td class="num">R$ 5.818,24</td>
+          <td class="num">R$ 0,50</td>
+          <td class="num"><span class="dif-bad">R$ 5.817,74</span></td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</div>
+</body>
+</html>
