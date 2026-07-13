@@ -8,20 +8,34 @@
 <style>
 :root{--bg:#F2F0EB;--surface:#FFFFFF;--surface2:#F7F4ED;--surface3:#EEEBe4;--border:#E2DCCB;--text:#1A1714;--muted:#76695A;--accent:#28507E;--red:#B43A2E;--orange:#C77520;--yellow:#9F7E2C;--lime:#1F8C4D;--green:#1F8C4D;--senior:#0C7A6F;}
 *{box-sizing:border-box;margin:0;padding:0}
+html{overflow-y:scroll;scrollbar-gutter:stable}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
-.logo-senior{font-size:22px;font-weight:800;color:var(--senior);letter-spacing:-1px}
-.logo-ybera{font-size:13px;font-weight:600;color:var(--muted);border-left:1px solid var(--border);padding-left:16px}
+.logo-senior{font-size:27px;font-weight:800;color:var(--senior);letter-spacing:-1px}
+.logo-ybera{font-size:18px;font-weight:800;color:var(--muted);border-left:1px solid var(--border);padding-left:16px;letter-spacing:-.5px}
+.logo-ybera sup{font-size:10px;font-weight:700}
 .header-title{flex:1;text-align:center}
-.header-title h1{font-size:16px;font-weight:700}
-.header-title p{font-size:11px;color:var(--muted);margin-top:2px}
+.header-title h1{font-size:21px;font-weight:800}
+.header-title p{font-size:13px;color:var(--muted);margin-top:3px}
 .header-meta{font-size:11px;color:var(--muted);text-align:right;line-height:1.6}
 .header-ts{font-size:10px;color:var(--muted);text-align:right;line-height:1.5;border-left:1px solid var(--border);padding-left:14px}
 .header-ts strong{display:block;font-size:11px;color:var(--text);font-weight:600}
 .top-banner{background:linear-gradient(135deg,#F7F4ED,#EEEBe4);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:57px;z-index:49}
 .top-banner span{font-size:12px;color:var(--muted)}
 .btn-analise{background:linear-gradient(135deg,#28507E,#6A4990);color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;text-decoration:none}
-main{padding:20px 24px;display:flex;flex-direction:column;gap:20px;max-width:1400px;margin:0 auto}
+.app-shell{display:flex;align-items:flex-start;gap:20px;max-width:1600px;margin:0 auto;padding:20px 24px}
+.sidebar{width:170px;flex:0 0 170px;display:flex;flex-direction:column;gap:6px;position:sticky;top:20px}
+.sidebar-item{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 9px;text-decoration:none;color:var(--text);font-size:10.5px;font-weight:700;line-height:1.25;transition:all .15s ease}
+.sidebar-item:hover{border-color:var(--accent);transform:translateX(2px)}
+.sidebar-item .ico{font-size:12px;line-height:1}
+.sidebar-item .lbl{flex:1}
+.sidebar-item.active{background:linear-gradient(135deg,var(--accent),#6A4990);color:#fff;border-color:var(--accent);box-shadow:0 4px 14px #28507E55}
+.sidebar-item.wip{opacity:.8}
+.sidebar-sub{display:flex;align-items:center;gap:6px;padding:5px 9px 5px 24px;text-decoration:none;color:var(--muted);font-size:9.5px;font-weight:600;border-left:2px solid var(--border);margin-left:8px}
+.sidebar-sub:hover{color:var(--accent);border-left-color:var(--accent)}
+.sidebar-sub.active{color:var(--accent);border-left-color:var(--accent)}
+.sidebar-wip-badge{font-size:6.5px;background:#facc1533;color:#9F7E2C;padding:1px 5px;border-radius:99px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+main{padding:0;flex:1;min-width:0;display:flex;flex-direction:column;gap:20px}
 .grid-top{display:grid;grid-template-columns:400px 1fr;gap:16px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
 .card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
@@ -74,23 +88,29 @@ tr:hover td{background:#E2DCCB66}
 .dep-toggle.open{background:var(--muted)}
 .dep-group-name{font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-right:auto}
 .dep-chip{font-size:11px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 10px;white-space:nowrap}
+.hist-charts{display:flex;flex-direction:column;gap:18px}
+.hist-chart-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.hist-chart-card h4{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.canvas-wrap-hist{position:relative;height:180px}
 </style>
 </head>
 <body>
 <header>
   <div class="logo-senior">Senior</div>
-  <div class="logo-ybera">YBERA GROUP</div>
+  <div class="logo-ybera">YBERAGROUP<sup>®</sup></div>
   <div class="header-title">
     <h1>Dashboard · Acuracidade de Estoque</h1>
     <p>Cruzamento de estoque entre WMS × ERP · GYP / YBERA</p>
   </div>
-  <div class="header-meta">Estoques: Viana G9 · Viana G3 · Guarapari G1</div>
-  <div class="header-ts">Última atualização<strong>10/07/2026 11:15</strong></div>
+  <div class="header-ts">Última atualização<strong>13/07/2026 11:01</strong></div>
 </header>
-<div class="top-banner">
-  <span>🔎 Explore os SKUs com maiores divergências</span>
-  <a href="analise_skus.html" class="btn-analise">📊 Análise detalhada por SKU</a>
-</div>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="sidebar-item active" href="dashboard_acuracidade.html"><span class="ico">📊</span><span class="lbl">Acuracidade entre Sistemas</span></a>
+    <a class="sidebar-item" href="analise_skus.html"><span class="ico">🔎</span><span class="lbl">Análise Detalhada por SKU</span></a>
+    <a class="sidebar-item" href="posicao_estoque.html"><span class="ico">📦</span><span class="lbl">Posição de Estoque</span></a>
+    <a class="sidebar-sub" href="posicao_estoque_detalhado.html"><span class="lbl">Posição de Estoque Detalhado</span></a>
+  </aside>
 <main>
   <div class="grid-top">
     <div class="card gauge-card">
@@ -102,21 +122,40 @@ tr:hover td{background:#E2DCCB66}
     <div class="card">
       <div class="card-title">KPIs Gerais</div>
       <div class="kpi-grid">
-        <div class="kpi"><div class="kpi-label">SKUs Comparados</div><div class="kpi-val">938</div></div>
-        <div class="kpi"><div class="kpi-label">SKUs Sem Diferença</div><div class="kpi-val" style="color:var(--green)">4</div></div>
-        <div class="kpi"><div class="kpi-label">Acurácia por SKU</div><div class="kpi-val" style="color:var(--orange)">0,43%</div></div>
-        <div class="kpi"><div class="kpi-label">Depósitos sem Integração WMS<br><span style="font-weight:400;font-size:10px">(fora da acuracidade)</span></div><div class="kpi-val" style="color:var(--muted)">3.881.966</div></div>
+        <div class="kpi"><div class="kpi-label">SKUs Comparados</div><div class="kpi-val">942</div></div>
+        <div class="kpi"><div class="kpi-label">SKUs Sem Diferença</div><div class="kpi-val" style="color:var(--green)">6</div></div>
+        <div class="kpi"><div class="kpi-label">Acurácia por SKU</div><div class="kpi-val" style="color:var(--orange)">0,64%</div></div>
+        <div class="kpi"><div class="kpi-label">Depósitos sem Integração WMS<br><span style="font-weight:400;font-size:10px">(fora da acuracidade)</span></div><div class="kpi-val" style="color:var(--muted)">3.949.655</div></div>
       </div>
     </div>
   </div>
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Depósitos sem movimentação Direta feita pelo WMS</div>
+      <table><thead><tr><th>Depósito</th><th>Nome do Depósito</th><th class="num">Saldo ERP</th></tr></thead>
+      <tbody id="tbExclDeps"></tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Observação</div>
+      <div id="exclNote" style="font-size:13px;line-height:1.8;color:var(--text)">⚠️ Estes 5 depósitos existem apenas no ERP, sem depósito correspondente no WMS, e por isso <strong>não são contabilizados na acuracidade entre os sistemas</strong>.<br><br>Fica a atenção para que a validação desses saldos seja feita pelos setores responsáveis por esses depósitos.</div>
+    </div>
+  </div>
   <div class="saldo-row">
-    <div class="saldo-card"><div class="saldo-label">Saldo WMS (base física)</div><div class="saldo-val wms">13.172.985</div></div>
-    <div class="saldo-card"><div class="saldo-label">Saldo ERP (sistêmico)</div><div class="saldo-val erp">27.215.252</div></div>
-    <div class="saldo-card"><div class="saldo-label">Diferença Absoluta</div><div class="saldo-val dif">14.056.815</div></div>
+    <div class="saldo-card"><div class="saldo-label">Saldo WMS (base física)</div><div class="saldo-val wms">13.192.605</div></div>
+    <div class="saldo-card"><div class="saldo-label">Saldo ERP (sistêmico)</div><div class="saldo-val erp">27.203.080</div></div>
+    <div class="saldo-card"><div class="saldo-label">Diferença Absoluta</div><div class="saldo-val dif">14.010.476</div></div>
   </div>
   <div class="card">
     <div class="card-title">Detalhamento por Depósito</div>
     <table><tbody id="tbDepositos"></tbody></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Acurácia Diária · Julho/2026 (dia 01 ao dia 31)</div>
+    <div class="hist-charts">
+      <div class="hist-chart-card"><h4>Viana G9</h4><div class="canvas-wrap-hist"><canvas id="chartHistG9"></canvas></div></div>
+      <div class="hist-chart-card"><h4>Viana G3</h4><div class="canvas-wrap-hist"><canvas id="chartHistG3"></canvas></div></div>
+      <div class="hist-chart-card"><h4>Guarapari G1</h4><div class="canvas-wrap-hist"><canvas id="chartHistG1"></canvas></div></div>
+    </div>
   </div>
   <div class="stock-filter" id="stockFilter">
     <span class="lbl">Filtrar gráficos por estoque:</span>
@@ -145,12 +184,15 @@ tr:hover td{background:#E2DCCB66}
   </div>
   <div class="alert-nota">⚠️ <strong>Nota metodológica:</strong> Matéria-Prima em KG nativos · demais famílias em UN. Acuracidade = (Saldo ERP – |ERP − WMS|) / Saldo ERP, truncada em 0%.</div>
 </main>
+</div>
 <script>
-const KPIS = {"skus_comparados": 938, "skus_sem_diferenca": 4, "acur_por_sku": 0.0043, "saldo_erp_un": 27092642.0, "saldo_wms_un": 13043101.0, "dif_un": 14049541.0, "saldo_erp_kg": 122610.0, "saldo_wms_kg": 129884.0, "dif_kg": 7274.0, "acur_global": 0.4801, "excl_total": 3881966.0, "excl_detail": [{"dep": "1-150", "saldo": 3113704}, {"dep": "1-300", "saldo": 103313}, {"dep": "1-400", "saldo": 3900}, {"dep": "1-500", "saldo": 41886}, {"dep": "1-900", "saldo": 619162}]};
-const FAMILIAS = [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 254, "skuERP": 280, "saldoWMS": 129884.0, "saldoERP": 122610.0, "acc": 0.7008}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 466, "skuERP": 492, "saldoWMS": 12583450.0, "saldoERP": 26083740.0, "acc": 0.4803}, {"fam": "GRANEL", "tag": "fam-3", "unit": "UN", "skuWMS": 0, "skuERP": 22, "saldoWMS": 0.0, "saldoERP": 891.0, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 91, "skuERP": 135, "saldoWMS": 454248.0, "saldoERP": 997132.0, "acc": 0.4475}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 9, "skuERP": 9, "saldoWMS": 5403.0, "saldoERP": 10878.0, "acc": 0.4967}];
-const FAMILIAS_POR_ESTOQUE = {"Estoque de Viana G9": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 10, "skuERP": 279, "saldoWMS": 3518.98, "saldoERP": 7170.555, "acc": 0.4855663194829415}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 466, "skuERP": 483, "saldoWMS": 12547818.0, "saldoERP": 12632975.0, "acc": 0.894955147144675}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 91, "skuERP": 130, "saldoWMS": 450648.0, "saldoERP": 488713.0, "acc": 0.9019363102679896}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 9, "skuERP": 9, "saldoWMS": 5403.0, "saldoERP": 5439.0, "acc": 0.9933811362382791}], "Estoque de Viana G3": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 0, "skuERP": 2, "saldoWMS": 0.0, "saldoERP": 10.8, "acc": 0.0}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 0, "skuERP": 3, "saldoWMS": 0.0, "saldoERP": 154601.7, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 0, "skuERP": 3, "saldoWMS": 0.0, "saldoERP": 1986.0, "acc": 0.0}], "Estoque de Guarapari G1": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 254, "skuERP": 253, "saldoWMS": 121682.25599999994, "saldoERP": 85132.06161999995, "acc": 0.5161919192812799}]};
-const DEPOSITOS = [{"dep": "1100", "nome": "DEP. VIANA G9", "grupo": "Estoque de Viana G9", "comp": 573, "sd": 331, "acc_sku": 0.5777, "sw": 12872025.48, "se": 12993224.742, "da": 121199.2620000001, "dif": 121199.2620000001, "acc_q": 0.8943, "crit": "CRITICA"}, {"dep": "1101", "nome": "DEP. Avaria/Bloqueado G9", "grupo": "Estoque de Viana G9", "comp": 11, "sd": 10, "acc_sku": 0.9091, "sw": 72396.0, "se": 72293.0, "da": 103.0, "dif": -103.0, "acc_q": 0.9986, "crit": "MEDIA"}, {"dep": "1102", "nome": "DEP. Vencidos G9", "grupo": "Estoque de Viana G9", "comp": 28, "sd": 28, "acc_sku": 1.0, "sw": 52575.0, "se": 52575.0, "da": 0.0, "dif": 0.0, "acc_q": 1.0, "crit": "BAIXA"}, {"dep": "1103", "nome": "DEP. Perdas/Inventario G9", "grupo": "Estoque de Viana G9", "comp": 39, "sd": 39, "acc_sku": 1.0, "sw": 10391.0, "se": 10391.0, "da": 0.0, "dif": 0.0, "acc_q": 1.0, "crit": "BAIXA"}, {"dep": "1010", "nome": "DEP. Retencao G9", "grupo": "Estoque de Viana G9", "comp": 662, "sd": 0, "acc_sku": 0.0, "sw": 0.5, "se": 5813.813, "da": 5813.313, "dif": 5813.313, "acc_q": 0.0001, "crit": "CRITICA"}, {"dep": "3100", "nome": "DEP. Fiscal Viana G9", "grupo": "Estoque de Viana G9", "comp": 596, "sd": 286, "acc_sku": 0.4799, "sw": 13007387.48, "se": 13766824.342, "da": 759436.8619999997, "dif": 759436.8619999997, "acc_q": 0.8988, "crit": "CRITICA"}, {"dep": "1-100", "nome": "DEP. VIANA G3", "grupo": "Estoque de Viana G3", "comp": 6, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 154776.7, "da": 154776.7, "dif": 154776.7, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-150", "nome": "DEP. Avaria/Bloqueado G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 4.8, "da": 4.8, "dif": 4.8, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-160", "nome": "DEP. QUARENTENA G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 1797.0, "da": 1797.0, "dif": 1797.0, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "1-700", "nome": "DEP. RETENCAO G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 20.0, "da": 20.0, "dif": 20.0, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-100", "nome": "DEP. Fiscal Viana G3", "grupo": "Estoque de Viana G3", "comp": 55, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 27845.45222, "da": 27845.45222, "dif": 27845.45222, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "1200", "nome": "DEP. GUARAPARI G1", "grupo": "Estoque de Guarapari G1", "comp": 253, "sd": 91, "acc_sku": 0.3597, "sw": 121277.833, "se": 84656.51564, "da": 36621.31736, "dif": -36621.31736, "acc_q": 0.5143, "crit": "CRITICA"}, {"dep": "1203", "nome": "DEP. Perdas/Inventario G1", "grupo": "Estoque de Guarapari G1", "comp": 92, "sd": 70, "acc_sku": 0.7609, "sw": 404.423, "se": 475.54598, "da": 71.12297999999998, "dif": 71.12297999999998, "acc_q": 0.8504, "crit": "MEDIA"}];
-const CRIT_BREAKDOWN = {"CRITICA": [{"familia": "MATERIA_PRIMA", "skus": 280, "lotes": 1368}, {"familia": "EMBALAGEM", "skus": 488, "lotes": 2437}, {"familia": "GRANEL", "skus": 22, "lotes": 23}, {"familia": "PRODUTO_ACABADO", "skus": 135, "lotes": 501}, {"familia": "MATERIAL_APOIO", "skus": 9, "lotes": 26}], "ALTA": [{"familia": "MATERIA_PRIMA", "skus": 53, "lotes": 58}, {"familia": "EMBALAGEM", "skus": 32, "lotes": 37}, {"familia": "PRODUTO_ACABADO", "skus": 1, "lotes": 1}], "MEDIA": [{"familia": "MATERIA_PRIMA", "skus": 51, "lotes": 52}, {"familia": "EMBALAGEM", "skus": 29, "lotes": 30}, {"familia": "PRODUTO_ACABADO", "skus": 3, "lotes": 3}], "BAIXA": [{"familia": "MATERIA_PRIMA", "skus": 30, "lotes": 30}, {"familia": "EMBALAGEM", "skus": 17, "lotes": 18}, {"familia": "PRODUTO_ACABADO", "skus": 2, "lotes": 2}]};
+const KPIS = {"skus_comparados": 942, "skus_sem_diferenca": 6, "acur_por_sku": 0.0064, "saldo_erp_un": 26980874.0, "saldo_wms_un": 13082852.0, "dif_un": 13898022.0, "saldo_erp_kg": 222206.0, "saldo_wms_kg": 109753.0, "dif_kg": 112454.0, "acur_global": 0.4826, "excl_total": 3949655.0, "excl_detail": [{"dep": "1-150", "nome": "FABRICA", "saldo": 3137992}, {"dep": "1-300", "nome": "Expedicao", "saldo": 103313}, {"dep": "1-400", "nome": "QUARENTENA", "saldo": 2900}, {"dep": "1-500", "nome": "EM TERCEIRO", "saldo": 41886}, {"dep": "1-900", "nome": "DEPÓSITO BACKUP WMS", "saldo": 663563}]};
+const FAMILIAS = [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 253, "skuERP": 281, "saldoWMS": 109753.0, "saldoERP": 222206.0, "acc": 0.4535}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 460, "skuERP": 495, "saldoWMS": 12606797.0, "saldoERP": 25973641.0, "acc": 0.4835}, {"fam": "GRANEL", "tag": "fam-3", "unit": "UN", "skuWMS": 0, "skuERP": 22, "saldoWMS": 0.0, "saldoERP": 891.0, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 90, "skuERP": 135, "saldoWMS": 470652.0, "saldoERP": 995463.0, "acc": 0.4648}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 9, "skuERP": 9, "saldoWMS": 5403.0, "saldoERP": 10878.0, "acc": 0.4967}];
+const FAMILIAS_POR_ESTOQUE = {"Estoque de Viana G9": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 10, "skuERP": 279, "saldoWMS": 3518.9800000000005, "saldoERP": 3671.1229999999973, "acc": 0.9484236839789896}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 460, "skuERP": 479, "saldoWMS": 12606797.0, "saldoERP": 12566794.0, "acc": 0.8993378104232471}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 90, "skuERP": 128, "saldoWMS": 470652.0, "saldoERP": 480526.0, "acc": 0.959431955815086}, {"fam": "MATERIAL APOIO", "tag": "fam-5", "unit": "UN", "skuWMS": 9, "skuERP": 9, "saldoWMS": 5403.0, "saldoERP": 5439.0, "acc": 0.9933811362382791}], "Estoque de Viana G3": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 0, "skuERP": 2, "saldoWMS": 0.0, "saldoERP": 10.8, "acc": 0.0}, {"fam": "EMBALAGEM", "tag": "fam-2", "unit": "UN", "skuWMS": 0, "skuERP": 3, "saldoWMS": 0.0, "saldoERP": 154601.7, "acc": 0.0}, {"fam": "PRODUTO ACABADO", "tag": "fam-4", "unit": "UN", "skuWMS": 0, "skuERP": 3, "saldoWMS": 0.0, "saldoERP": 1986.0, "acc": 0.0}], "Estoque de Guarapari G1": [{"fam": "MATERIA-PRIMA", "tag": "fam-1", "unit": "KG", "skuWMS": 253, "skuERP": 253, "saldoWMS": 99737.42699999992, "saldoERP": 88227.81911999996, "acc": 0.7906739943908068}]};
+const DEPOSITOS = [{"dep": "1100", "nome": "DEP. VIANA G9", "grupo": "Estoque de Viana G9", "comp": 567, "sd": 360, "acc_sku": 0.6349, "sw": 12948546.48, "se": 12912890.88, "da": 35655.59999999963, "dif": -35655.59999999963, "acc_q": 0.901, "crit": "CRITICA"}, {"dep": "1101", "nome": "DEP. Avaria/Bloqueado G9", "grupo": "Estoque de Viana G9", "comp": 11, "sd": 10, "acc_sku": 0.9091, "sw": 72396.0, "se": 72293.0, "da": 103.0, "dif": -103.0, "acc_q": 0.9986, "crit": "MEDIA"}, {"dep": "1102", "nome": "DEP. Vencidos G9", "grupo": "Estoque de Viana G9", "comp": 34, "sd": 34, "acc_sku": 1.0, "sw": 55017.0, "se": 55017.0, "da": 0.0, "dif": 0.0, "acc_q": 1.0, "crit": "BAIXA"}, {"dep": "1103", "nome": "DEP. Perdas/Inventario G9", "grupo": "Estoque de Viana G9", "comp": 41, "sd": 41, "acc_sku": 1.0, "sw": 10411.0, "se": 10411.0, "da": 0.0, "dif": 0.0, "acc_q": 1.0, "crit": "BAIXA"}, {"dep": "1010", "nome": "DEP. Retencao G9", "grupo": "Estoque de Viana G9", "comp": 662, "sd": 0, "acc_sku": 0.0, "sw": 0.5, "se": 5818.243, "da": 5817.743, "dif": 5817.743, "acc_q": 0.0001, "crit": "CRITICA"}, {"dep": "3100", "nome": "DEP. Fiscal Viana G9", "grupo": "Estoque de Viana G9", "comp": 599, "sd": 297, "acc_sku": 0.4958, "sw": 13086370.48, "se": 13724313.342, "da": 637942.8619999997, "dif": 637942.8619999997, "acc_q": 0.9005, "crit": "CRITICA"}, {"dep": "1-100", "nome": "DEP. VIANA G3", "grupo": "Estoque de Viana G3", "comp": 6, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 154776.7, "da": 154776.7, "dif": 154776.7, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-150", "nome": "DEP. Avaria/Bloqueado G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 4.8, "da": 4.8, "dif": 4.8, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-160", "nome": "DEP. QUARENTENA G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 1797.0, "da": 1797.0, "dif": 1797.0, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "1-700", "nome": "DEP. RETENCAO G3", "grupo": "Estoque de Viana G3", "comp": 1, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 20.0, "da": 20.0, "dif": 20.0, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "3-100", "nome": "DEP. Fiscal Viana G3", "grupo": "Estoque de Viana G3", "comp": 55, "sd": 0, "acc_sku": 0.0, "sw": 0.0, "se": 27845.45222, "da": 27845.45222, "dif": 27845.45222, "acc_q": 0.0, "crit": "CRITICA"}, {"dep": "1200", "nome": "DEP. GUARAPARI G1", "grupo": "Estoque de Guarapari G1", "comp": 252, "sd": 119, "acc_sku": 0.4722, "sw": 99333.004, "se": 87752.27314, "da": 11580.730859999996, "dif": -11580.730859999996, "acc_q": 0.7904, "crit": "CRITICA"}, {"dep": "1203", "nome": "DEP. Perdas/Inventario G1", "grupo": "Estoque de Guarapari G1", "comp": 92, "sd": 70, "acc_sku": 0.7609, "sw": 404.423, "se": 475.54598, "da": 71.12297999999998, "dif": 71.12297999999998, "acc_q": 0.8504, "crit": "MEDIA"}];
+const EXCL_DEPS = [{"dep": "1-150", "nome": "FABRICA", "saldo": 3137992.0}, {"dep": "1-300", "nome": "Expedicao", "saldo": 103313.0}, {"dep": "1-400", "nome": "QUARENTENA", "saldo": 2900.0}, {"dep": "1-500", "nome": "EM TERCEIRO", "saldo": 41886.0}, {"dep": "1-900", "nome": "DEPÓSITO BACKUP WMS", "saldo": 663563.0}];
+const HISTORICO_MES = {"Estoque de Viana G9": {"10": {"acc": 0.9671, "hora": "11:15"}, "13": {"acc": 0.9773, "hora": "11:01"}}, "Estoque de Viana G3": {"10": {"acc": 0.0, "hora": "11:15"}, "13": {"acc": 0.0, "hora": "11:01"}}, "Estoque de Guarapari G1": {"10": {"acc": 0.5707, "hora": "11:15"}, "13": {"acc": 0.8695, "hora": "11:01"}}};
+const CRIT_BREAKDOWN = {"CRITICA": [{"familia": "MATERIA_PRIMA", "skus": 281, "lotes": 1366}, {"familia": "EMBALAGEM", "skus": 491, "lotes": 2376}, {"familia": "GRANEL", "skus": 22, "lotes": 23}, {"familia": "PRODUTO_ACABADO", "skus": 134, "lotes": 495}, {"familia": "MATERIAL_APOIO", "skus": 9, "lotes": 26}], "ALTA": [{"familia": "MATERIA_PRIMA", "skus": 28, "lotes": 28}, {"familia": "EMBALAGEM", "skus": 31, "lotes": 35}], "MEDIA": [{"familia": "MATERIA_PRIMA", "skus": 42, "lotes": 43}, {"familia": "EMBALAGEM", "skus": 18, "lotes": 19}, {"familia": "PRODUTO_ACABADO", "skus": 1, "lotes": 1}], "BAIXA": [{"familia": "MATERIA_PRIMA", "skus": 42, "lotes": 43}, {"familia": "EMBALAGEM", "skus": 12, "lotes": 12}, {"familia": "PRODUTO_ACABADO", "skus": 2, "lotes": 2}]};
 const STOCK_SHORT={'Estoque de Viana G9':'Viana G9','Estoque de Viana G3':'Viana G3','Estoque de Guarapari G1':'Guarapari G1','__ALL__':'Todos os Estoques'};
 let CURRENT_STOCK='Estoque de Viana G9';
 const DEP_NAMES={'1100':'DEP. VIANA G9','1101':'DEP. Avaria/Bloqueado G9','1102':'DEP. Vencidos G9','1103':'DEP. Perdas/Inventario G9','1010':'DEP. Retencao G9','3100':'DEP. Fiscal Viana G9','1-100':'DEP. VIANA G3','3-150':'DEP. Avaria/Bloqueado G3','3-160':'DEP. QUARENTENA G3','3-180':'DEP. PRODUTOS REPROVADOS G3','3-700':'DEP. INVENTARIO AJUSTE G3','1-700':'DEP. RETENCAO G3','3-100':'DEP. Fiscal Viana G3','1200':'DEP. GUARAPARI G1','1203':'DEP. Perdas/Inventario G1'};
@@ -160,7 +202,7 @@ function accColor(v){if(v>=.95)return'#22c55e';if(v>=.80)return'#84cc16';if(v>=.
 const critLabel=c=>({'CRITICA':'CRÍTICA','ALTA':'ALTA','MEDIA':'MÉDIA','BAIXA':'BAIXA'}[c]||'—');
 const critCls=c=>'c-'+c.toLowerCase();
 (function(){
-  const p=0.480100;
+  const p=0.482600;
   const canvas=document.getElementById('gauge');const ctx=canvas.getContext('2d');
   const W=370,H=210,cx=W/2,cy=H-20,R=150,ri=85;
   const zones=[{f:0,t:.10,c:'#7f1d1d'},{f:.10,t:.20,c:'#dc2626'},{f:.20,t:.30,c:'#ea580c'},{f:.30,t:.40,c:'#f97316'},{f:.40,t:.50,c:'#facc15'},{f:.50,t:.60,c:'#d4d62a'},{f:.60,t:.70,c:'#a3e635'},{f:.70,t:.80,c:'#84cc16'},{f:.80,t:.90,c:'#4ade80'},{f:.90,t:1.0,c:'#22c55e'}];
@@ -177,6 +219,75 @@ const critCls=c=>'c-'+c.toLowerCase();
   let label='CRÍTICA',cls='zone-critica';
   if(p>=.90){label='ÓTIMA';cls='zone-otima';}else if(p>=.75){label='BOA';cls='zone-boa';}else if(p>=.50){label='REGULAR';cls='zone-regular';}else if(p>=.30){label='RUIM';cls='zone-ruim';}
   badge.textContent=label;badge.className='gauge-badge '+cls;
+})();
+(function(){
+  const tb=document.getElementById('tbExclDeps');
+  if(!tb) return;
+  if(!EXCL_DEPS.length){tb.innerHTML='<tr><td colspan="3" style="color:var(--muted)">Nenhum depósito fora da integração identificado.</td></tr>';return;}
+  tb.innerHTML=EXCL_DEPS.map(e=>`<tr><td><strong>${e.dep}</strong></td><td>${e.nome||'—'}</td><td class="num">${fmt(e.saldo)}</td></tr>`).join('');
+})();
+(function(){
+  if(typeof Chart==='undefined') return;
+  // extrai o valor de acuracidade do dia, aceitando tanto o formato novo
+  // {acc,hora} (ultima atualizacao do dia) quanto o formato antigo (numero puro)
+  const diaValor=v=>{
+    if(v===undefined||v===null) return null;
+    const n=(typeof v==='object')?v.acc:v;
+    return (n===undefined||n===null)?null:n;
+  };
+  const diaHora=v=>(v&&typeof v==='object')?v.hora:null;
+  const barLabelPlugin={
+    id:'barLabelPlugin',
+    afterDatasetsDraw(chart){
+      const {ctx}=chart;
+      chart.data.datasets.forEach((dataset,di)=>{
+        const meta=chart.getDatasetMeta(di);
+        meta.data.forEach((bar,idx)=>{
+          const val=dataset.data[idx];
+          if(val==null) return;
+          ctx.save();
+          ctx.fillStyle='#1A1714';
+          ctx.font='700 9px Segoe UI';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(val.toFixed(1).replace('.',',')+'%', bar.x, bar.y-3);
+          ctx.restore();
+        });
+      });
+    }
+  };
+  const days=Array.from({length:31},(_,i)=>String(i+1).padStart(2,'0'));
+  const cfgs=[
+    {id:'chartHistG9', key:'Estoque de Viana G9', color:'#28507E'},
+    {id:'chartHistG3', key:'Estoque de Viana G3', color:'#6A4990'},
+    {id:'chartHistG1', key:'Estoque de Guarapari G1', color:'#1F8C4D'},
+  ];
+  cfgs.forEach(cfg=>{
+    const canvas=document.getElementById(cfg.id);
+    if(!canvas) return;
+    const serie=HISTORICO_MES[cfg.key]||{};
+    const raw=days.map(d=>serie[String(parseInt(d,10))]);
+    const data=raw.map(v=>{
+      const n=diaValor(v);
+      return n==null?null:Math.round(n*1000)/10;
+    });
+    const horas=raw.map(diaHora);
+    const cores=data.map(v=>v==null?'#E2DCCB':accColor(v/100));
+    new Chart(canvas.getContext('2d'),{
+      type:'bar',
+      data:{labels:days.map(d=>'Dia '+d),datasets:[{label:'Acurácia %',data:data,backgroundColor:cores,borderRadius:4,maxBarThickness:22}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        layout:{padding:{top:16}},
+        scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}},x:{ticks:{autoSkip:false,maxRotation:0,font:{size:9}}}},
+        plugins:{legend:{display:false},tooltip:{callbacks:{
+          label:ctx=>ctx.parsed.y==null?'sem dado':ctx.parsed.y.toFixed(1).replace('.',',')+'%',
+          afterLabel:ctx=>{const h=horas[ctx.dataIndex];return h?`Última atualização: ${h}`:'';}
+        }}}
+      },
+      plugins:[barLabelPlugin]
+    });
+  });
 })();
 function renderFamiliasTable(fams){
   const tb=document.getElementById('tbFamilias');tb.innerHTML='';let tsw=0,tse=0,tnw=0,tne=0;
