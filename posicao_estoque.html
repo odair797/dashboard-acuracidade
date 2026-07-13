@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Posição de Estoque · GYP/YBERA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root { --bg:#F2F0EB;--surface:#FFFFFF;--surface2:#F7F4ED;--surface3:#EEEBe4;--border:#E2DCCB;--text:#1A1714;--muted:#76695A;--accent:#28507E;--red:#B43A2E;--orange:#C77520;--yellow:#9F7E2C;--lime:#1F8C4D;--green:#1F8C4D;--senior:#0C7A6F; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html { overflow-y:scroll; scrollbar-gutter:stable; }
+body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; }
+header { background:var(--surface); border-bottom:1px solid var(--border); padding:10px 24px; display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:50; }
+
+  .logo-senior { font-size:27px; font-weight:800; color:var(--senior); letter-spacing:-1px; }
+  .logo-ybera { font-size:18px; font-weight:800; color:var(--muted); border-left:1px solid var(--border); padding-left:16px; letter-spacing:-.5px; }
+  .logo-ybera sup { font-size:10px; font-weight:700; }
+  .header-title { flex:1; text-align:center; }
+  .header-title h1 { font-size:21px; font-weight:800; }
+  .header-title p { font-size:13px; color:var(--muted); margin-top:3px; }
+  .header-ts { font-size:10px; color:var(--muted); text-align:right; line-height:1.5; border-left:1px solid var(--border); padding-left:14px; }
+  .header-ts strong { display:block; font-size:11px; color:var(--text); font-weight:600; }
+  .app-shell { display:flex; align-items:flex-start; gap:20px; max-width:1600px; margin:0 auto; padding:20px 24px; }
+  .sidebar { width:170px; flex:0 0 170px; display:flex; flex-direction:column; gap:6px; position:sticky; top:20px; }
+  .sidebar-item { display:flex; align-items:center; gap:7px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:7px 9px; text-decoration:none; color:var(--text); font-size:10.5px; font-weight:700; line-height:1.25; transition:all .15s ease; }
+  .sidebar-item:hover { border-color:var(--accent); transform:translateX(2px); }
+  .sidebar-item .ico { font-size:12px; line-height:1; }
+  .sidebar-item .lbl { flex:1; }
+  .sidebar-item.active { background:linear-gradient(135deg,var(--accent),#6A4990); color:#fff; border-color:var(--accent); box-shadow:0 4px 14px #28507E55; }
+  .sidebar-sub { display:flex; align-items:center; gap:6px; padding:5px 9px 5px 24px; text-decoration:none; color:var(--muted); font-size:9.5px; font-weight:600; border-left:2px solid var(--border); margin-left:8px; }
+  .sidebar-sub:hover { color:var(--accent); border-left-color:var(--accent); }
+  .sidebar-sub.active { color:var(--accent); border-left-color:var(--accent); }
+
+main { padding:0; flex:1; min-width:0; display:flex; flex-direction:column; gap:20px; }
+.filial-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
+.filial-card-titulo { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+.filial-card-valor { font-size:32px; font-weight:900; color:var(--accent); letter-spacing:-1px; }
+.filial-card-valor.pendente { font-size:16px; color:var(--muted); font-weight:400; }
+.filial-card-legenda { font-size:12px; color:var(--muted); margin-top:6px; }
+.footer-ts { font-size:11px; color:var(--muted); }
+.hist-charts { display:grid; grid-template-columns:1fr; gap:18px; }
+.hist-chart-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:18px 20px 14px; }
+.hist-chart-card h4 { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:2px; }
+.hist-chart-card .hist-sub { font-size:10.5px; color:var(--muted); opacity:.75; margin-bottom:12px; display:block; }
+.canvas-wrap-hist { position:relative; height:280px; }
+table.tbl-dep { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.tbl-dep th { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; background:var(--surface2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+table.tbl-dep th.num { text-align:right; }
+table.tbl-dep td { padding:6px 10px; border-bottom:1px solid var(--border); }
+table.tbl-dep td.num { text-align:right; }
+table.tbl-hist { table-layout:fixed; }
+table.tbl-hist col.col-dia { width:28%; }
+table.tbl-hist col.col-valor { width:44%; }
+table.tbl-hist col.col-hora { width:28%; }
+h3 { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; }
+.pendente-txt { color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-senior">Senior</div>
+  <div class="logo-ybera">YBERAGROUP<sup>®</sup></div>
+  <div class="header-title">
+    <h1>Posição de Estoque</h1>
+    <p>Saldo consolidado por filial · GYP / YBERA</p>
+  </div>
+  <div class="header-ts">Última atualização<strong>13/07/2026 11:17</strong></div>
+</header>
+<div class="app-shell">
+<aside class="sidebar">
+    <a class="sidebar-item" href="dashboard_acuracidade.html"><span class="ico">📊</span><span class="lbl">Acuracidade entre Sistemas</span></a>
+    <a class="sidebar-item" href="analise_skus.html"><span class="ico">🔎</span><span class="lbl">Análise Detalhada por SKU</span></a>
+    <a class="sidebar-item active" href="posicao_estoque.html"><span class="ico">📦</span><span class="lbl">Posição de Estoque</span></a>
+    <a class="sidebar-sub" href="posicao_estoque_detalhado.html"><span class="lbl">Posição de Estoque Detalhado</span></a>
+  </aside>
+<main>
+  <div class="filial-row">
+    
+    <div class="card filial-card">
+      <div class="filial-card-titulo">YBERAGROUP® FILIAL 1</div>
+      <div class="filial-card-valor">R$ 10.119.937,01</div>
+      <div class="filial-card-legenda">Posição de Estoque · ERP</div>
+    </div>
+    
+    <div class="card filial-card">
+      <div class="filial-card-titulo">YBERAGROUP® FILIAL 3</div>
+      <div class="filial-card-valor">R$ 3.725.996,78</div>
+      <div class="filial-card-legenda">Posição de Estoque · ERP</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="filial-card-titulo" style="margin-bottom:14px">Posição de Estoque Diária · ERP (Dia 01 a 31)</div>
+    <div class="hist-charts">
+      <div class="hist-chart-card"><h4>YBERAGROUP® FILIAL 1</h4><span class="hist-sub">Posição de Estoque ERP por dia</span><div class="canvas-wrap-hist"><canvas id="chartHistF1"></canvas></div></div>
+      <div class="hist-chart-card"><h4>YBERAGROUP® FILIAL 3</h4><span class="hist-sub">Posição de Estoque ERP por dia</span><div class="canvas-wrap-hist"><canvas id="chartHistF3"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="filial-row">
+    
+    <div class="card">
+      <h3>Histórico Diário · YBERAGROUP® FILIAL 1 (ERP)</h3>
+      <table class="tbl-dep tbl-hist">
+        <colgroup>
+          <col class="col-dia"><col class="col-valor"><col class="col-hora">
+        </colgroup>
+        <thead>
+          <tr><th>Dia</th><th class="num">Valor ERP</th><th class="num">Última atualização</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>Dia 10</td>
+          <td class="num">R$ 10.119.937,01</td>
+          <td class="num">14:14</td>
+        </tr>
+        <tr>
+          <td>Dia 13</td>
+          <td class="num">R$ 10.119.937,01</td>
+          <td class="num">11:17</td>
+        </tr></tbody>
+      </table>
+    </div>
+    
+    <div class="card">
+      <h3>Histórico Diário · YBERAGROUP® FILIAL 3 (ERP)</h3>
+      <table class="tbl-dep tbl-hist">
+        <colgroup>
+          <col class="col-dia"><col class="col-valor"><col class="col-hora">
+        </colgroup>
+        <thead>
+          <tr><th>Dia</th><th class="num">Valor ERP</th><th class="num">Última atualização</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>Dia 10</td>
+          <td class="num">R$ 3.725.996,80</td>
+          <td class="num">14:14</td>
+        </tr>
+        <tr>
+          <td>Dia 13</td>
+          <td class="num">R$ 3.725.996,78</td>
+          <td class="num">11:17</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer-ts">Histórico diário registrado em 2026-07.</div>
+</main>
+</div>
+<script>
+(function(){
+  const HIST = {"f1": {"10": {"valor": 10119937.01, "hora": "14:14"}, "13": {"valor": 10119937.01, "hora": "11:17"}}, "f3": {"10": {"valor": 3725996.8, "hora": "14:14"}, "13": {"valor": 3725996.78, "hora": "11:17"}}};
+  const DIAS = Array.from({length:31}, (_, i) => String(i + 1).padStart(2, '0'));
+
+  function buildSerie(raw) {
+    raw = raw || {};
+    const labels = DIAS.map(d => 'Dia ' + d);
+    const valores = DIAS.map(d => { const v = raw[String(parseInt(d, 10))]; return v ? v.valor : null; });
+    const horas = DIAS.map(d => { const v = raw[String(parseInt(d, 10))]; return v ? v.hora : null; });
+    return { labels, valores, horas };
+  }
+
+  const barLabelPlugin = {
+    id: 'barLabelPlugin',
+    afterDatasetsDraw(chart) {
+      const {ctx} = chart;
+      chart.data.datasets.forEach((dataset, di) => {
+        const meta = chart.getDatasetMeta(di);
+        meta.data.forEach((bar, idx) => {
+          const val = dataset.data[idx];
+          if (val == null) return;
+          ctx.save();
+          ctx.fillStyle = '#1A1714';
+          ctx.font = '700 9px Segoe UI';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(fmtM(val), bar.x, bar.y - 4);
+          ctx.restore();
+        });
+      });
+    }
+  };
+  function fmtM(v) {
+    if (v == null) return '';
+    return 'R$ ' + (v / 1e6).toFixed(1).replace('.', ',') + 'M';
+  }
+  function fmtCurrency(v) {
+    return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function montarGrafico(canvasId, raw, cor) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const serie = buildSerie(raw);
+    const maxVal = Math.max(0, ...serie.valores.filter(v => v != null));
+    new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: serie.labels,
+        datasets: [{ label: 'Posição ERP', data: serie.valores, backgroundColor: cor, borderRadius: 5, maxBarThickness: 28, categoryPercentage: 0.62, barPercentage: 0.82 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 26, right: 10, left: 4 } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            suggestedMax: maxVal * 1.18,
+            grid: { color: '#E2DCCB88' },
+            border: { display: false },
+            ticks: { callback: v => fmtM(v), color: '#76695A', font: { size: 10 } }
+          },
+          x: {
+            grid: { display: false },
+            border: { color: '#E2DCCB' },
+            ticks: { autoSkip: false, maxRotation: 0, font: { size: 9 }, color: '#76695A' }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1A1714', padding: 10, cornerRadius: 6, displayColors: false,
+            callbacks: {
+              label: ctx => ctx.parsed.y == null ? 'sem dado' : fmtCurrency(ctx.parsed.y),
+              afterLabel: ctx => { const h = serie.horas[ctx.dataIndex]; return h ? `Última atualização: ${h}` : ''; }
+            }
+          }
+        }
+      },
+      plugins: [barLabelPlugin]
+    });
+  }
+  montarGrafico('chartHistF1', HIST.f1, '#28507E');
+  montarGrafico('chartHistF3', HIST.f3, '#6A4990');
+})();
+</script>
+</body>
+</html>
