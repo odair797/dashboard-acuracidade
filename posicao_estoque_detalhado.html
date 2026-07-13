@@ -63,18 +63,6 @@ table.tbl-dep th { text-align:left; padding:8px 10px; border-bottom:1px solid va
 table.tbl-dep th.num { text-align:right; }
 table.tbl-dep td { padding:6px 10px; border-bottom:1px solid var(--border); vertical-align:top; }
 table.tbl-dep td.num { text-align:right; }
-table.tbl-dep5 { table-layout:fixed; }
-table.tbl-dep5 col.c-dep { width:8%; }
-table.tbl-dep5 col.c-desc { width:24%; }
-table.tbl-dep5 col.c-num { width:15%; }
-table.tbl-dep5 col.c-dif { width:38%; }
-table.tbl-dep5 th { overflow:hidden; text-overflow:ellipsis; }
-table.tbl-dep5 td { overflow:visible; word-break:break-word; overflow-wrap:break-word; }
-table.tbl-dep5 td:nth-child(2) { white-space:normal; }
-table.tbl-dep5 td.num { white-space:normal; }
-table.tbl-dep5 .dif-bad, table.tbl-dep5 .dif-ok, table.tbl-dep5 .dif-muted { white-space:normal; word-break:break-word; }
-table.tbl-dep5 .dif-valor-linha, table.tbl-dep5 .dif-rotulo { white-space:nowrap; }
-table.tbl-dep5 .dif-valor-linha { font-size:12px; }
 table.tbl-hist { table-layout:fixed; }
 table.tbl-hist col.col-dia { width:28%; }
 table.tbl-hist col.col-valor { width:44%; }
@@ -91,7 +79,7 @@ h3 { font-size:11px; font-weight:700; color:var(--muted); text-transform:upperca
     <h1>Posição de Estoque Detalhado</h1>
     <p>Cruzamento ERP × WMS por filial e depósito (números reais do dia) · GYP / YBERA</p>
   </div>
-  <div class="header-ts">Última atualização<strong>13/07/2026 17:28</strong></div>
+  <div class="header-ts">Última atualização<strong>13/07/2026 17:36</strong></div>
 </header>
 <div class="app-shell">
 <aside class="sidebar">
@@ -149,10 +137,7 @@ h3 { font-size:11px; font-weight:700; color:var(--muted); text-transform:upperca
     
     <div class="card">
       <h3>Detalhamento por Depósito · Filial 1 (ERP × WMS)</h3>
-      <table class="tbl-dep tbl-dep5">
-        <colgroup>
-          <col class="c-dep"><col class="c-desc"><col class="c-num"><col class="c-num"><col class="c-dif">
-        </colgroup>
+      <table class="tbl-dep">
         <thead>
           <tr><th>Depósito</th><th>Descrição</th><th class="num">Saldo ERP</th><th class="num">Saldo WMS</th><th class="num">Diferença</th></tr>
         </thead>
@@ -277,15 +262,15 @@ h3 { font-size:11px; font-weight:700; color:var(--muted); text-transform:upperca
           <td class="num"><span class="dif-bad"><span class="dif-valor-linha">▼ R$ 1.169,84</span><span class="dif-rotulo">(a menos)</span></span></td>
         </tr>
         <tr>
-          <td>3-150</td>
-          <td>DEP. Avaria/Bloqueado G3</td>
+          <td>1103</td>
+          <td>DEP. Perdas/Inventario G9</td>
           <td class="num">R$ 0,00</td>
           <td class="num">R$ 0,00</td>
           <td class="num"><span class="dif-ok">R$ 0,00</span></td>
         </tr>
         <tr>
-          <td>1103</td>
-          <td>DEP. Perdas/Inventario G9</td>
+          <td>3-150</td>
+          <td>DEP. Avaria/Bloqueado G3</td>
           <td class="num">R$ 0,00</td>
           <td class="num">R$ 0,00</td>
           <td class="num"><span class="dif-ok">R$ 0,00</span></td>
@@ -295,10 +280,7 @@ h3 { font-size:11px; font-weight:700; color:var(--muted); text-transform:upperca
     
     <div class="card">
       <h3>Detalhamento por Depósito · Filial 3 (Estoque de Viana G9)</h3>
-      <table class="tbl-dep tbl-dep5">
-        <colgroup>
-          <col class="c-dep"><col class="c-desc"><col class="c-num"><col class="c-num"><col class="c-dif">
-        </colgroup>
+      <table class="tbl-dep">
         <thead>
           <tr><th>Depósito</th><th>Descrição</th><th class="num">Saldo ERP</th><th class="num">Saldo WMS</th><th class="num">Diferença</th></tr>
         </thead>
